@@ -76,7 +76,7 @@ public abstract class JetModule extends ServletModule
 			this.registration = registration;
 		}
 
-		public RegistrationBinder path(String regex)
+		public RegistrationBinder at(String regex)
 		{
 			registration.pattern = Pattern.compile(regex);
 			return this;
@@ -150,7 +150,7 @@ public abstract class JetModule extends ServletModule
 		builder = null;
 	}
 	
-	protected void configure(Configuration configuration)
+	protected void use(Configuration configuration)
 	{
 		configuration.configure(builder, binder());
 	}
