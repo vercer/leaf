@@ -33,9 +33,9 @@ public class Label extends Component<Object>
 		{
 			string = string
 					.replace("&", "&amp;")
-					.replace("\n", "<br/>\n")
 					.replace("<", "&lt;")
-					.replace(">", "&gt;");
+					.replace(">", "&gt;")
+					.replace("\n", "<br/>\n");
 		}
 		return Markup.builder(markup).clear().content(string).build();
 	}
