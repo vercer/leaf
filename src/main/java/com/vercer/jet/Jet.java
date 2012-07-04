@@ -83,11 +83,6 @@ public class Jet
 		return responses.get();
 	}
 
-	public ServletContext getContext()
-	{
-		return contexts.get();
-	}
-
 	private static final ThreadLocal<Throwable> throwableLocal = new ThreadLocal<Throwable>();
 
 	static void setThrowable(Throwable throwable)
@@ -99,5 +94,10 @@ public class Jet
 	public Throwable getThrowable()
 	{
 		return throwableLocal.get();
+	}
+
+	public ServletContext getServletContext()
+	{
+		return contexts.get();
 	}
 }
