@@ -102,7 +102,6 @@ public class Container<T> extends Component<T>
 		Map<String, Method> nameToMethod = getAccessibleReadMethods(this.getClass());
 		Method getter = nameToMethod.get(id);
 
-		// ignore markup without an id
 		if (getter == null)
 		{
 			throw new TransformException("No transformer for " + id, markup);
@@ -111,19 +110,11 @@ public class Container<T> extends Component<T>
 		try
 		{
 			Object object = getter.invoke(this);
-			Transformer transformer;
-			if (object == null)
+			TypeConverter converter = Jet.get().getConverter();
+			Transformer transformer = converter.convert(object, getter.getReturnType(), Transformer.class);
+			if (transformer == null)
 			{
-				transformer = Transformer.REMOVE;
-			}
-			else
-			{
-				TypeConverter converter = Jet.get().getConverter();
-				transformer = converter.convert(object, getter.getReturnType(), Transformer.class);
-				if (transformer == null)
-				{
-					throw new TransformException("Could not convert " + object + " to Transformer for " + id, markup);
-				}
+				throw new TransformException("Could not convert " + object + " to Transformer for " + id, markup);
 			}
 
 			return transformer;

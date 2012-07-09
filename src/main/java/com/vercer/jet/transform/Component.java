@@ -23,7 +23,7 @@ public abstract class Component<T> implements Transformer, Provider<T>
 	{
 		this(Providers.of(value));
 	}
-
+	
 	@Override
 	public T get()
 	{
