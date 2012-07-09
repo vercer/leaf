@@ -92,7 +92,6 @@ public class Container<T> extends Component<T>
 		}
 		catch (Throwable t)
 		{
-			// TODO build a path of ids into the original throwing
 			throw new TransformException("Problem transforming " + childMarkupId, child, t);
 		}
 	}

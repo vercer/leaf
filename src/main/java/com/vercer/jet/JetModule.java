@@ -163,15 +163,6 @@ public abstract class JetModule extends ServletModule
 	@Override
 	public final void configureServlets()
 	{
-		requestStaticInjection(Jet.class);
-		install(new ServletModule()
-		{
-			@Override
-			protected void configureServlets()
-			{
-				filter("/*").through(JetFilter.class);
-			}
-		});
 		bind(new TypeLiteral<List<Registration>>() {}).toInstance(registrations);
 		requestStaticInjection(Container.class);
 		bind(TypeConverter.class).to(GuiceTypeConverter.class).in(Scopes.SINGLETON);
@@ -183,6 +174,9 @@ public abstract class JetModule extends ServletModule
 		bind(Settings.class).toInstance(settings);
 		
 		builder = null;
+		requestStaticInjection(Jet.class);
+
+		filter("/*").through(JetFilter.class);
 	}
 	
 	protected void use(Configuration configuration)
