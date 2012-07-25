@@ -209,7 +209,7 @@ public abstract class JetModule extends ServletModule
 		return converters.addBinding().to(clazz);
 	}
 
-	public RegistrationBinder show(Class<?> view)
+	public RegistrationBinder reply(Class<?> view)
 	{
 		Registration registration = new Registration();
 		registrations.add(registration);
@@ -222,7 +222,7 @@ public abstract class JetModule extends ServletModule
 		return binding;
 	}
 
-	public RegistrationBinder show(Object view)
+	public RegistrationBinder reply(Object view)
 	{
 		Registration registration = new Registration();
 		registrations.add(registration);
