@@ -35,6 +35,10 @@ public abstract class Decorator extends Template
 		{
 			currentTemplateClass = decorators.pop();
 			template = template(currentTemplateClass);
+			if (template == null && decorators.isEmpty())
+			{
+				throw new IllegalStateException("No template found for class " + currentTemplateClass);
+			}
 		}
 		while(template == null);
 

@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 @Retention(RUNTIME)
 @Target(ElementType.TYPE)
-public @interface At
+public @interface Match
 {
 	String value();
 }

@@ -2,7 +2,6 @@ package com.vercer.jet;
 
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -162,7 +161,7 @@ public class Dispatcher
 				{
 					for (PredicateMethod pm : binding.events)
 					{
-						if (pm.predicate.apply(request))
+						if (pm.predicate == null || pm.predicate.apply(request))
 						{
 							result = call(target, pm.method, matcher);
 							

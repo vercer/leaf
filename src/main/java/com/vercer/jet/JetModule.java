@@ -34,7 +34,7 @@ import com.vercer.jet.Dispatcher.PredicateMethod;
 import com.vercer.jet.Dispatcher.Registration;
 import com.vercer.jet.JetModule.RegistrationBinder.EventBinder;
 import com.vercer.jet.Settings.Builder;
-import com.vercer.jet.annotation.At;
+import com.vercer.jet.annotation.Match;
 import com.vercer.jet.annotation.Catch;
 import com.vercer.jet.annotation.Handle;
 import com.vercer.jet.annotation.Handle.Http;
@@ -62,7 +62,7 @@ public abstract class JetModule extends ServletModule
 			this.registration = registration;
 		}
 
-		public RegistrationBinder at(String regex)
+		public RegistrationBinder match(String regex)
 		{
 			registration.pattern = Pattern.compile(regex);
 			return this;
@@ -251,7 +251,7 @@ public abstract class JetModule extends ServletModule
 		return converters.addBinding().to(clazz);
 	}
 
-	public RegistrationBinder show(Class<?> view)
+	public RegistrationBinder reply(Class<?> view)
 	{
 		Registration registration = new Registration();
 		registrations.add(registration);
@@ -264,7 +264,7 @@ public abstract class JetModule extends ServletModule
 		return binding;
 	}
 
-	public RegistrationBinder show(Object view)
+	public RegistrationBinder reply(Object view)
 	{
 		Registration registration = new Registration();
 		registrations.add(registration);
@@ -280,10 +280,10 @@ public abstract class JetModule extends ServletModule
 	private void reflect(Class<?> view, RegistrationBinder binder)
 	{
 		// check class annotations
-		At at = view.getAnnotation(At.class);
+		Match at = view.getAnnotation(Match.class);
 		if (at != null)
 		{
-			binder.at(at.value());
+			binder.match(at.value());
 		}
 
 		Catch katch = view.getAnnotation(Catch.class);
