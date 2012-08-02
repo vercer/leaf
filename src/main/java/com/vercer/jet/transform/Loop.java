@@ -48,7 +48,7 @@ public abstract class Loop<T> extends Container<T>
 		// repeat the markup
 		for(iteration = 0; loop(); iteration++)
 		{
-			// make a copy of markup so loops do not interfer
+			// make a copy of markup so loops do not interfere
 			Markup transformed = transformLoop(Markup.builder(markup).build());
 
 			if (chained != null)
@@ -66,6 +66,6 @@ public abstract class Loop<T> extends Container<T>
 	{
 		return transformContainer(markup);
 	}
-
+	
 	protected abstract boolean loop();
 }

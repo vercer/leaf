@@ -162,7 +162,7 @@ public class Dispatcher
 				{
 					for (PredicateMethod pm : binding.events)
 					{
-						if (pm.predicate.apply(request))
+						if (pm.predicate == null || pm.predicate.apply(request))
 						{
 							result = call(target, pm.method, matcher);
 							

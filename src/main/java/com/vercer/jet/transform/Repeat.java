@@ -5,7 +5,7 @@ import java.util.Iterator;
 import com.google.common.collect.Iterators;
 import com.google.inject.Provider;
 
-public class Repeat<T> extends Loop<Iterator<T>>
+public abstract class Repeat<T> extends Loop<Iterator<T>>
 {
 	private T item;
 	private Iterator<T> iterator;
@@ -43,7 +43,7 @@ public class Repeat<T> extends Loop<Iterator<T>>
 		};
 	}
 
-	protected void populate(T item) {};
+	protected abstract void populate(T item);
 
 	@Override
 	protected boolean loop()
@@ -61,10 +61,5 @@ public class Repeat<T> extends Loop<Iterator<T>>
 			return true;
 		}
 		return false;
-	}
-
-	protected boolean accept(T item)
-	{
-		return true;
 	}
 }
