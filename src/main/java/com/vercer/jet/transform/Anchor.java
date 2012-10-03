@@ -129,7 +129,7 @@ public class Anchor extends Container<URI>
 		return result.build();
 	}
 
-	private void addNotNullParameter(StringBuilder builder, String name, Object value)
+	public static void addNotNullParameter(StringBuilder builder, String name, Object value)
 	{
 		if (value != null)
 		{
