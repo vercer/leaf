@@ -113,10 +113,12 @@ public class Container<T> extends Component<T>
 			Transformer transformer = converter.convert(object, getter.getReturnType(), Transformer.class);
 			if (transformer == null)
 			{
-				throw new TransformException("Could not convert " + object + " to Transformer for " + id, markup);
+				return Transformer.REMOVE;
 			}
-
-			return transformer;
+			else
+			{
+				return transformer;
+			}
 		}
 		catch (Exception e)
 		{

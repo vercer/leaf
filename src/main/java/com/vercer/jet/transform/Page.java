@@ -79,7 +79,8 @@ public abstract class Page extends Decorator
 		else
 		{
 			// contained page returns only the body
-			return bodyBuilder.tag(Jet.get().getSettings().getPrefix() + ":body").build();
+//			return bodyBuilder.tag(Jet.get().getSettings().getPrefix() + ":body").build();
+			return bodyBuilder.build();
 		}
 	}
 

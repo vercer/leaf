@@ -291,9 +291,8 @@ public abstract class JetModule extends ServletModule
 			binder.throwing(katch.value());
 		}
 		
-		// TODO check superclass fields and methods
-
 		// check method annotations
+		// TODO check superclass fields and methods
 		Method[] methods = view.getDeclaredMethods();
 		for (Method method : methods)
 		{
