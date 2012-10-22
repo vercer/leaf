@@ -22,7 +22,15 @@ public class AttributeTransformer extends Component<String>
 	@Override
 	public Markup transformComponent(Markup markup)
 	{
-		return Markup.builder(markup).attribute(name, modifyExisting(markup.getAttributes().get(name), get())).build();
+		String value = get();
+		if (value == null)
+		{
+			return Transformer.REMOVE.transform(markup);
+		}
+		else
+		{
+			return Markup.builder(markup).attribute(name, modifyExisting(markup.getAttributes().get(name), value)).build();
+		}
 	}
 
 	protected String modifyExisting(String existing, String replacement)

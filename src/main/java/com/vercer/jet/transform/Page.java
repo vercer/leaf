@@ -2,7 +2,6 @@ package com.vercer.jet.transform;
 
 import java.util.List;
 
-import com.vercer.jet.Jet;
 import com.vercer.jet.Markup;
 import com.vercer.jet.Markup.Builder;
 import com.vercer.jet.Parser;
@@ -133,7 +132,7 @@ public abstract class Page extends Decorator
 			}
 
 			// process the head markup against the page
-			Markup transformed = transformContainer(child);
+			Markup transformed = this.transformContainer(child);
 
 			return head.transform(transformed);
 		}
@@ -161,9 +160,9 @@ public abstract class Page extends Decorator
 
 	protected Markup transformBody(Markup child)
 	{
-		return transformContainer(child);
+		// use this page to get fields
+		return this.transformContainer(child);
 	}
-
 
 	public class Head implements Transformer
 	{
