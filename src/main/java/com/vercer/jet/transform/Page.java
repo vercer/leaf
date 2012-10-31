@@ -2,6 +2,7 @@ package com.vercer.jet.transform;
 
 import java.util.List;
 
+import com.vercer.jet.Jet;
 import com.vercer.jet.Markup;
 import com.vercer.jet.Markup.Builder;
 import com.vercer.jet.Parser;
@@ -78,8 +79,8 @@ public abstract class Page extends Decorator
 		else
 		{
 			// contained page returns only the body
-//			return bodyBuilder.tag(Jet.get().getSettings().getPrefix() + ":body").build();
-			return bodyBuilder.build();
+			return bodyBuilder.tag(Jet.get().getSettings().getPrefix() + ":body").build();
+//			return bodyBuilder.build();
 		}
 	}
 
@@ -153,9 +154,11 @@ public abstract class Page extends Decorator
 
 			return bodyBuilder.build();
 		}
-
-		// this method is also called for children of head and body
-		return super.transformChild(child);
+		else 
+		{
+			// this method is also called for children of head and body
+			return super.transformChild(child);
+		}
 	}
 
 	protected Markup transformBody(Markup child)

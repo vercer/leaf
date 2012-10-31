@@ -63,5 +63,4 @@ public class InlineSourceTransformer implements Transformer
 			throw new RuntimeException(e);
 		}
 	}
-
 }
