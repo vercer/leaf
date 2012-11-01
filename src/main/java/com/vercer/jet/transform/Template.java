@@ -61,7 +61,7 @@ public abstract class Template extends Container<Void> implements Markup.Source
 		}
 		else
 		{
-			return Markup.builder(transformed).prelude(markup.getPrelude()).attributes(markup.getAttributes()).build();
+			return Markup.builder(transformed).tag(markup.getTag()).prelude(markup.getPrelude()).attributes(markup.getAttributes()).build();
 		}
 	}
 
@@ -120,7 +120,17 @@ public abstract class Template extends Container<Void> implements Markup.Source
 
 	public static String load(Class<? extends Template> type)
 	{
-		String name = type.getSimpleName() + ".html";
+		com.vercer.jet.annotation.Template annotation = type.getAnnotation(com.vercer.jet.annotation.Template.class);
+		String name;
+		if (annotation != null)
+		{
+			name = annotation.value();
+		}
+		else
+		{
+			name = type.getSimpleName() + ".html";
+		}
+		
 		InputStream stream = type.getResourceAsStream(name);
 		if (stream == null)
 		{

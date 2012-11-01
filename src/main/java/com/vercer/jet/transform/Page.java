@@ -80,6 +80,7 @@ public abstract class Page extends Decorator
 		{
 			// contained page returns only the body
 			return bodyBuilder.tag(Jet.get().getSettings().getPrefix() + ":body").build();
+//			return bodyBuilder.build();
 		}
 	}
 
@@ -132,7 +133,7 @@ public abstract class Page extends Decorator
 			}
 
 			// process the head markup against the page
-			Markup transformed = transformContainer(child);
+			Markup transformed = this.transformContainer(child);
 
 			return head.transform(transformed);
 		}
@@ -153,16 +154,18 @@ public abstract class Page extends Decorator
 
 			return bodyBuilder.build();
 		}
-
-		// this method is also called for children of head and body
-		return super.transformChild(child);
+		else 
+		{
+			// this method is also called for children of head and body
+			return super.transformChild(child);
+		}
 	}
 
 	protected Markup transformBody(Markup child)
 	{
-		return transformContainer(child);
+		// use this page to get fields
+		return this.transformContainer(child);
 	}
-
 
 	public class Head implements Transformer
 	{

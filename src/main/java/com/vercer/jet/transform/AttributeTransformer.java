@@ -3,17 +3,17 @@ package com.vercer.jet.transform;
 import com.google.inject.Provider;
 import com.vercer.jet.Markup;
 
-public class AttributeTransformer<T> extends Component<T>
+public class AttributeTransformer extends Component<String>
 {
 	private final String name;
 
-	public AttributeTransformer(String name, T value)
+	public AttributeTransformer(String name, String value)
 	{
 		super(value);
 		this.name = name;
 	}
 
-	public AttributeTransformer(String name, Provider<T> value)
+	public AttributeTransformer(String name, Provider<String> value)
 	{
 		super(value);
 		this.name = name;
@@ -22,16 +22,19 @@ public class AttributeTransformer<T> extends Component<T>
 	@Override
 	public Markup transformComponent(Markup markup)
 	{
-		return Markup.builder(markup).attribute(name, modifyExisting(markup.getAttributes().get(name), valueToString(get()))).build();
+		String value = get();
+		if (value == null)
+		{
+			return Transformer.REMOVE.transform(markup);
+		}
+		else
+		{
+			return Markup.builder(markup).attribute(name, modifyExisting(markup.getAttributes().get(name), value)).build();
+		}
 	}
 
 	protected String modifyExisting(String existing, String replacement)
 	{
 		return replacement;
-	}
-
-	protected String valueToString(T value)
-	{
-		return value == null ? "" : value.toString();
 	}
 }

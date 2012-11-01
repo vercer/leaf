@@ -47,7 +47,7 @@ public class InlineSourceTransformer implements Transformer
 			if (!cache || content == null)
 			{
 				String source = markup.getAttributes().get(attribute);
-				InputStream stream = Jet.get().getContext().getResourceAsStream(source);
+				InputStream stream = Jet.get().getServletContext().getResourceAsStream(source);
 				content = CharStreams.toString(new InputStreamReader(stream));
 			}
 
@@ -63,5 +63,4 @@ public class InlineSourceTransformer implements Transformer
 			throw new RuntimeException(e);
 		}
 	}
-
 }

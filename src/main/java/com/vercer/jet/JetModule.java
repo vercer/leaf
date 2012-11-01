@@ -1,17 +1,18 @@
 package com.vercer.jet;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import javax.servlet.http.HttpServletRequest;
+
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
@@ -29,8 +30,15 @@ import com.vercer.convert.StringArrayToString;
 import com.vercer.convert.StringToPrimitive;
 import com.vercer.convert.ThrowableToString;
 import com.vercer.convert.TypeConverter;
+import com.vercer.jet.Dispatcher.PredicateMethod;
 import com.vercer.jet.Dispatcher.Registration;
+import com.vercer.jet.JetModule.RegistrationBinder.EventBinder;
 import com.vercer.jet.Settings.Builder;
+import com.vercer.jet.annotation.Match;
+import com.vercer.jet.annotation.Catch;
+import com.vercer.jet.annotation.Handle;
+import com.vercer.jet.annotation.Handle.Http;
+import com.vercer.jet.annotation.Parameter;
 import com.vercer.jet.convert.BooleanToTransformer;
 import com.vercer.jet.convert.ObjectToLabel;
 import com.vercer.jet.convert.ObjectToResponse;
@@ -43,28 +51,6 @@ import com.vercer.jet.transform.Transformer;
 
 public abstract class JetModule extends ServletModule
 {
-	public enum HttpMethod { POST, GET, PUT, DELETE, HEAD, ALL };
-
-	@Retention(RUNTIME)
-	@Target({ ElementType.METHOD })
-	public @interface Handle
-	{
-		HttpMethod[] value() default HttpMethod.ALL;
-	}
-
-	@Retention(RUNTIME)
-	@Target(ElementType.TYPE)
-	public @interface Match
-	{
-		String value();
-	}
-	@Retention(RUNTIME)
-	@Target(ElementType.TYPE)
-	public @interface Catch
-	{
-		Class<? extends Throwable> value();
-	}
-
 	private Settings settings;
 	private Builder builder = Settings.builder();
 
@@ -76,13 +62,13 @@ public abstract class JetModule extends ServletModule
 			this.registration = registration;
 		}
 
-		public RegistrationBinder at(String regex)
+		public RegistrationBinder match(String regex)
 		{
 			registration.pattern = Pattern.compile(regex);
 			return this;
 		}
 
-		public EventBinder on(HttpMethod method)
+		public EventBinder on(Http method)
 		{
 			return new EventBinder(method);
 		}
@@ -95,27 +81,76 @@ public abstract class JetModule extends ServletModule
 
 		public class EventBinder
 		{
-			private final HttpMethod http;
+			private final Http http;
+			private Predicate<HttpServletRequest> predicate;
 
-			public EventBinder(HttpMethod http)
+			public EventBinder(Http http)
 			{
 				this.http = http;
 			}
 
+			public EventBinder parameter(String name, String value)
+			{
+				andPredicate(new ParameterPredicate(name, value));
+				return this;
+			}
+			
+			private void andPredicate(Predicate<HttpServletRequest> predicate)
+			{
+				if (this.predicate == null)
+				{
+					this.predicate = predicate;
+				}
+				else
+				{
+					this.predicate = Predicates.and(this.predicate, predicate);
+				}
+			}
+
 			public RegistrationBinder call(String event)
 			{
-				Method[] methods = registration.receivingClass.getClass().getDeclaredMethods();
+				Method[] methods = registration.getTargetClass().getDeclaredMethods();
 				for (Method method : methods)
 				{
 					if (method.getName().equals(event))
 					{
-						registration.events.put(http.name(), method);
+						if (registration.events == null)
+						{
+							registration.events = new ArrayList<Dispatcher.PredicateMethod>(2);
+						}
+						
+						if (http != Http.ALL)
+						{
+							andPredicate(new HttpMethodPredicate(http));
+						}
+						
+						registration.events.add(new PredicateMethod(predicate, method));
 						return RegistrationBinder.this;
 					}
 				}
 				throw new IllegalArgumentException("Could not find method " + event);
 			}
 		}
+
+//		public void push(String name)
+//		{
+//			Field field;
+//			try
+//			{
+//				field = registration.getTargetClass().getDeclaredField(name);
+//			}
+//			catch (Exception e)
+//			{
+//				throw new IllegalArgumentException("Could not find field " + name, e);
+//			}
+//			
+//			if (registration.push == null)
+//			{
+//				registration.push = new ArrayList<Field>(2);
+//			}
+//			
+//			registration.push.add(field);
+//		}
 	}
 
 
@@ -128,15 +163,6 @@ public abstract class JetModule extends ServletModule
 	@Override
 	public final void configureServlets()
 	{
-		requestStaticInjection(Jet.class);
-		install(new ServletModule()
-		{
-			@Override
-			protected void configureServlets()
-			{
-				filter("/*").through(JetFilter.class);
-			}
-		});
 		bind(new TypeLiteral<List<Registration>>() {}).toInstance(registrations);
 		requestStaticInjection(Container.class);
 		bind(TypeConverter.class).to(GuiceTypeConverter.class).in(Scopes.SINGLETON);
@@ -148,6 +174,9 @@ public abstract class JetModule extends ServletModule
 		bind(Settings.class).toInstance(settings);
 		
 		builder = null;
+		requestStaticInjection(Jet.class);
+
+		filter("/*").through(JetFilter.class);
 	}
 	
 	protected void use(Configuration configuration)
@@ -155,9 +184,22 @@ public abstract class JetModule extends ServletModule
 		configuration.configure(builder, binder());
 	}
 
+	/**
+	 *	Injectable type converter
+	 */
 	public static class GuiceTypeConverter extends CombinedTypeConverter
 	{
-		@com.google.inject.Inject
+		@Override
+		public <T> T convert(Object input, Type source, Type target)
+		{
+			if (input == null && source == String.class)
+			{
+				input = "";
+			}
+			return super.convert(input, source, target);
+		}
+		
+		@Inject
 		public void registerConverters(Set<Converter<?, ?>> converters)
 		{
 			super.registerAll(converters);
@@ -176,7 +218,6 @@ public abstract class JetModule extends ServletModule
 		converters.addBinding().toInstance(new ObjectToString());
 		converters.addBinding().toInstance(new ThrowableToString());
 		converters.addBinding().toInstance(new StringToLabel());
-		converters.addBinding().toInstance(new ObjectToLabel());
 		converters.addBinding().toInstance(new BooleanToTransformer());
 		converters.addBinding().toInstance(new UriToAnchor());
 		converters.addBinding().toInstance(new UrlToAnchor());
@@ -217,7 +258,7 @@ public abstract class JetModule extends ServletModule
 
 		registration.receivingClass = view;
 
-		reflect(view, registration);
+		reflect(view, binding);
 
 		return binding;
 	}
@@ -230,48 +271,59 @@ public abstract class JetModule extends ServletModule
 
 		registration.receivingInstance = view;
 
-		reflect(view.getClass(), registration);
+		reflect(view.getClass(), binding);
 
 		return binding;
 	}
 
-	private void reflect(Class<?> view, Registration registration)
+	private void reflect(Class<?> view, RegistrationBinder binder)
 	{
+		// check class annotations
 		Match at = view.getAnnotation(Match.class);
-
 		if (at != null)
 		{
-			registration.pattern = Pattern.compile(at.value());
+			binder.match(at.value());
 		}
 
 		Catch katch = view.getAnnotation(Catch.class);
 		if (katch != null)
 		{
-			registration.throwing = katch.value();
+			binder.throwing(katch.value());
 		}
-
+		
+		// check method annotations
+		// TODO check superclass fields and methods
 		Method[] methods = view.getDeclaredMethods();
 		for (Method method : methods)
 		{
 			Handle on = method.getAnnotation(Handle.class);
 			if (on != null)
 			{
-				if (registration.events == null)
+				Parameter parameter = method.getAnnotation(Parameter.class);
+				
+				Http[] values = on.value();
+				for (Http value : values)
 				{
-					registration.events = new HashMap<String, Method>(2);
-				}
-				HttpMethod[] values = on.value();
-				if (values[0] == HttpMethod.ALL)
-				{
-					values = HttpMethod.values();
-				}
-
-				for (HttpMethod value : values)
-				{
-					registration.events.put(value.name(), method);
+					EventBinder eb = binder.on(value);
+					if (parameter != null)
+					{
+						eb.parameter(parameter.name(), parameter.value());
+					}
+					eb.call(method.getName());
 				}
 			}
 		}
+		
+//		// check field annotations
+//		Field[] fields = view.getDeclaredFields();
+//		for (Field field : fields)
+//		{
+//			Push push = field.getAnnotation(Push.class);
+//			if (push != null)
+//			{
+//				binder.push(field.getName());
+//			}
+//		}
 	}
 
 	public final void global(Transformer transformer)

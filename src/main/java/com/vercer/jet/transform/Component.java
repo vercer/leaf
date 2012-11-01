@@ -23,21 +23,21 @@ public abstract class Component<T> implements Transformer, Provider<T>
 	{
 		this(Providers.of(value));
 	}
-
+	
 	@Override
 	public T get()
 	{
 		return provider.get();
 	}
 
-	public <C extends Transformer>  C chain(C chained)
+	public Component<?> chain(Component<?> chained)
 	{
 		if (this.chained != null)
 		{
 			throw new IllegalStateException("Chained component already set");
 		}
 		this.chained = chained;
-		return chained;
+		return this;
 	}
 
 	@Override

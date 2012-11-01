@@ -31,13 +31,19 @@ public class Label extends Component<Object>
 		String html = markup.attribute(Jet.get().getSettings().getPrefix() + ":html");
 		if (!this.html && !Boolean.valueOf(html))
 		{
-			string = string
-					.replace("&", "&amp;")
-					.replace("<", "&lt;")
-					.replace(">", "&gt;")
-					.replace("\n", "<br/>\n");
+			string = escapeHTML(string);
 		}
 		return Markup.builder(markup).clear().content(string).build();
+	}
+
+	public static String escapeHTML(String string)
+	{
+		string = string
+				.replace("&", "&amp;")
+				.replace("<", "&lt;")
+				.replace(">", "&gt;")
+				.replace("\n", "<br/>\n");
+		return string;
 	}
 
 	public void setHtml(boolean html)

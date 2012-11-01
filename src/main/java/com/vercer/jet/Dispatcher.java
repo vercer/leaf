@@ -1,11 +1,7 @@
 package com.vercer.jet;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -13,15 +9,12 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import lombok.extern.java.Log;
 
 import com.google.common.base.Predicate;
 import com.google.inject.BindingAnnotation;
@@ -34,8 +27,11 @@ import com.google.inject.Singleton;
 import com.vercer.convert.TypeConverter;
 import com.vercer.generics.Generics;
 import com.vercer.jet.Markup.Source;
+import com.vercer.jet.annotation.Capture;
+import com.vercer.jet.annotation.Default;
+import com.vercer.jet.annotation.Pull;
 
-@Singleton @Log
+@Singleton
 public class Dispatcher
 {
 	private static final Object NOT_SET = new Object();
@@ -47,42 +43,37 @@ public class Dispatcher
 	private final List<Registration> bindings;
 	private final ParametersProxyHandler handler = new ParametersProxyHandler();
 
-	@Retention(RUNTIME)
-	@Target({ ElementType.FIELD, ElementType.PARAMETER })
-	public @interface Pull
-	{
-		String value() default "";
-		String fallback() default "";
-	}
-
-	@Retention(RUNTIME)
-	@Target({ ElementType.FIELD, ElementType.PARAMETER })
-	public @interface Push
-	{
-	}
-
-	@Retention(RUNTIME)
-	@Target({ ElementType.FIELD, ElementType.PARAMETER })
-	public @interface Capture
-	{
-		int value() default 1;
-	}
-
-	@Retention(RUNTIME)
-	@Target({ ElementType.METHOD })
-	public @interface Default
-	{
-		String[] value();
-	}
-
 	public static class Registration
 	{
 		Pattern pattern;
 		Predicate<HttpServletRequest> predicate;
 		Class<?> receivingClass;
 		Object receivingInstance;
-		Map<String, Method> events;
+		List<PredicateMethod> events;
 		Class<? extends Throwable> throwing;
+		
+		public Class<?> getTargetClass()
+		{
+			if (receivingClass == null)
+			{
+				return receivingInstance.getClass();
+			}
+			else
+			{
+				return receivingClass;
+			}
+		}
+	}
+	
+	public static class PredicateMethod
+	{
+		public PredicateMethod(Predicate<HttpServletRequest> predicate, Method method)
+		{
+			this.predicate = predicate;
+			this.method = method;
+		}
+		Predicate<HttpServletRequest> predicate;
+		Method method;
 	}
 
 	@Inject
@@ -153,6 +144,7 @@ public class Dispatcher
 			Matcher matcher = binding.pattern.matcher(path);
 			if (matcher.matches() && (binding.predicate == null || binding.predicate.apply(request)))
 			{
+				// get our target object that will supply a reply
 				Object target;
 				if (binding.receivingInstance == null)
 				{
@@ -162,17 +154,24 @@ public class Dispatcher
 				{
 					target = binding.receivingInstance;
 				}
-
+				
+				// execute an event method to get a reply
 				Object result = null;
 				if (binding.events != null)
 				{
-					Method method = binding.events.get(request.getMethod().toUpperCase());
-					if (method != null)
+					for (PredicateMethod pm : binding.events)
 					{
-						result = call(target, method, matcher);
+						if (pm.predicate == null || pm.predicate.apply(request))
+						{
+							result = call(target, pm.method, matcher);
+							
+							// only execute one event to get our result
+							break;
+						}
 					}
 				}
 
+				// convert the result object to a reply
 				Reply reply;
 				if (result instanceof Reply)
 				{
@@ -180,6 +179,7 @@ public class Dispatcher
 				}
 				else
 				{
+					// if no result then use the target itself as result
 					if (result == null)
 					{
 						if (target instanceof Markup.Source)
