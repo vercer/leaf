@@ -68,6 +68,21 @@ public class Anchor extends Container<URI>
 	{
 		markup = transformAnchor(markup);
 
+		String uri = toUriString();
+
+		// add href and title attributes
+		Builder result = Markup.builder(markup).attribute("href", uri);
+		if (title != null)
+		{
+			result.attribute("title", title.get());
+		}
+
+		// transform the contained markup
+		return result.build();
+	}
+
+	public String toUriString()
+	{
 		String uri = get().toString();
 		StringBuilder builder = null;
 
@@ -117,16 +132,7 @@ public class Anchor extends Container<URI>
 			URI resolved = current.resolve(uri);
 			uri = resolved.toString();
 		}
-
-		// add href and title attributes
-		Builder result = Markup.builder(markup).attribute("href", uri);
-		if (title != null)
-		{
-			result.attribute("title", title.get());
-		}
-
-		// transform the contained markup
-		return result.build();
+		return uri;
 	}
 
 	public static void addNotNullParameter(StringBuilder builder, String name, Object value)
