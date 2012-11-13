@@ -9,8 +9,8 @@ import com.google.appengine.api.utils.SystemProperty.Environment;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
-import com.vercer.jet.Configuration;
-import com.vercer.jet.Settings;
+import com.vercer.leaf.Configuration;
+import com.vercer.leaf.Settings;
 
 public class EngineModule implements Module, Configuration
 {
@@ -55,7 +55,7 @@ public class EngineModule implements Module, Configuration
 	}
 
 	@Override
-	public void configure(Settings.Builder settings, Binder binder)
+	public void configure(Settings.SettingsBuilder settings, Binder binder)
 	{
 		binder.install(this);
 	}
