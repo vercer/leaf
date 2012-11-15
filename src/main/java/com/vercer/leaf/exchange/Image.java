@@ -34,7 +34,7 @@ public class Image extends Component<URI>
 	}
 
 	@Override
-	public Markup transformComponent(Markup markup)
+	public Markup exchangeComponent(Markup markup)
 	{
 		// add href and title attributes
 		Builder builder = Markup.builder(markup).attribute("src", src);

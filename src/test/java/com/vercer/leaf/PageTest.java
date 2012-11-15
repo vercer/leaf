@@ -1,4 +1,4 @@
-package com.vercer.jet;
+package com.vercer.leaf;
 
 import org.junit.Test;
 
@@ -9,7 +9,7 @@ public class PageTest
 	@Test
 	public void decorated()
 	{
-		Jet.set(new TestJet());
+		Leaf.set(new TestJet());
 		
 		TestPage page = new TestPage();
 		Markup markup = page.getMarkup();
@@ -27,6 +27,7 @@ public class PageTest
 				"		In the base page\n" + 
 				"		<div>cow</div>\n" + 
 				"		\n" + 
+				"	\n" + 
 				"		and how:\n" + 
 				"		<div>moo</div>\n" + 
 				"		not quite it...\n" + 
@@ -42,7 +43,7 @@ public class PageTest
 	@Test
 	public void twiceDecorated()
 	{
-		Jet.set(new TestJet());
+		Leaf.set(new TestJet());
 		
 		ThreeDeepTestPage page = new ThreeDeepTestPage();
 		Markup markup = page.getMarkup();
@@ -62,10 +63,12 @@ public class PageTest
 				"		In the base page\n" + 
 				"		<div>cow</div>\n" + 
 				"		\n" + 
+				"	\n" + 
 				"		and how:\n" + 
 				"		<div>bark</div>\n" + 
 				"		not quite it...\n" + 
 				"		\n" + 
+				"	\n" + 
 				"		this should be top of all\n" + 
 				"		and this bottom at <span>noon</span>\n" + 
 				"	\n" + 

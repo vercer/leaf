@@ -50,7 +50,7 @@ public abstract class Template extends Container<Void> implements Markup.Source
 	}
 
 	@Override
-	protected final Markup transformComponent(Markup markup)
+	protected final Markup exchangeComponent(Markup markup)
 	{
 		Markup template = getTemplate();
 		Markup transformed = transformTemplate(template);
@@ -67,7 +67,7 @@ public abstract class Template extends Container<Void> implements Markup.Source
 
 	protected Markup transformTemplate(Markup markup)
 	{
-		return super.transformComponent(markup);
+		return super.exchangeComponent(markup);
 	}
 
 	protected Markup template(Class<? extends Template> type)

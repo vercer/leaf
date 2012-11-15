@@ -37,7 +37,7 @@ public abstract class Loop<T> extends Container<T>
 	}
 
 	@Override
-	protected final Markup transformComponent(Markup markup)
+	protected final Markup exchangeComponentAndChained(Markup markup)
 	{
 		// put the prelude before the new container so it only shows once
 		Builder parent = Markup.builder().tag(LOOP_TAG).prelude(markup.getPrelude());
@@ -49,7 +49,7 @@ public abstract class Loop<T> extends Container<T>
 		for(iteration = 0; loop(); iteration++)
 		{
 			// make a copy of markup so loops do not interfere
-			Markup transformed = transformLoop(Markup.builder(markup).build());
+			Markup transformed = exchangeLoop(Markup.builder(markup).build());
 
 			if (chained != null)
 			{
@@ -62,9 +62,9 @@ public abstract class Loop<T> extends Container<T>
 		return parent.build();
 	}
 
-	protected Markup transformLoop(Markup markup)
+	protected Markup exchangeLoop(Markup markup)
 	{
-		return transformContainer(markup);
+		return super.exchangeComponentAndChained(markup);
 	}
 	
 	protected abstract boolean loop();

@@ -20,17 +20,9 @@ public class AttributeModifier extends Component<String>
 	}
 
 	@Override
-	public Markup transformComponent(Markup markup)
+	public Markup exchangeComponent(Markup markup)
 	{
-		String value = get();
-		if (value == null)
-		{
-			return Exchanger.REMOVE.exchange(markup);
-		}
-		else
-		{
-			return Markup.builder(markup).attribute(name, modifyExisting(markup.getAttributes().get(name), value)).build();
-		}
+		return Markup.builder(markup).attribute(name, modifyExisting(markup.getAttributes().get(name), get())).build();
 	}
 
 	protected String modifyExisting(String existing, String replacement)

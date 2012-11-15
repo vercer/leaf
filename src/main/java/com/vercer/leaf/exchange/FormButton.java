@@ -16,7 +16,7 @@ public class FormButton extends Component<URI>
 	}
 
 	@Override
-	protected Markup transformComponent(Markup markup)
+	protected Markup exchangeComponent(Markup markup)
 	{
 		Markup input = Markup.builder()
 				.tag("input")

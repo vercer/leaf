@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -53,7 +54,8 @@ public abstract class LeafModule extends ServletModule
 {
 	private Settings settings;
 	private SettingsBuilder builder = Settings.builder();
-
+	private static ThreadLocal<Request> requests = new ThreadLocal<Request>();
+	
 	public class RegistrationBinder
 	{
 		private final Registration registration;
@@ -131,32 +133,12 @@ public abstract class LeafModule extends ServletModule
 				throw new IllegalArgumentException("Could not find method " + event);
 			}
 		}
-
-//		public void push(String name)
-//		{
-//			Field field;
-//			try
-//			{
-//				field = registration.getTargetClass().getDeclaredField(name);
-//			}
-//			catch (Exception e)
-//			{
-//				throw new IllegalArgumentException("Could not find field " + name, e);
-//			}
-//			
-//			if (registration.push == null)
-//			{
-//				registration.push = new ArrayList<Field>(2);
-//			}
-//			
-//			registration.push.add(field);
-//		}
 	}
-
-
+	
 	private List<Dispatcher.Registration> registrations = new ArrayList<Dispatcher.Registration>();
 	private Multibinder<Converter<?, ?>> converters;
 	private Multibinder<Exchanger> transformers;
+	private Multibinder<Director> directors;
 
 	protected abstract void configure(SettingsBuilder builder);
 
@@ -168,11 +150,13 @@ public abstract class LeafModule extends ServletModule
 		bind(TypeConverter.class).to(GuiceTypeConverter.class).in(Scopes.SINGLETON);
 	    converters = Multibinder.newSetBinder(binder(), new TypeLiteral<Converter<?, ?>>() {});
 	    transformers = Multibinder.newSetBinder(binder(), new TypeLiteral<Exchanger>() {});
+	    directors = Multibinder.newSetBinder(binder(), new TypeLiteral<Director>() {});
+	    directors.addBinding().to(Director.class);
 		configure(builder);
 		bindDefaultConverters(converters);
 		settings = builder.build();
+		builder.addAllowedLocale(settings.getDefaultLocale());
 		bind(Settings.class).toInstance(settings);
-		
 		builder = null;
 		requestStaticInjection(Leaf.class);
 
@@ -250,6 +234,16 @@ public abstract class LeafModule extends ServletModule
 		return converters.addBinding().to(clazz);
 	}
 
+	public final void director(Director director)
+	{
+		directors.addBinding().toInstance(director);
+	}
+	
+	public final void director(Class<? extends Director> director)
+	{
+		directors.addBinding().to(director);
+	}
+	
 	public RegistrationBinder reply(Class<?> view)
 	{
 		Registration registration = new Registration();
@@ -268,14 +262,12 @@ public abstract class LeafModule extends ServletModule
 		Registration registration = new Registration();
 		registrations.add(registration);
 		RegistrationBinder binding = new RegistrationBinder(registration);
-
 		registration.receivingInstance = view;
-
 		reflect(view.getClass(), binding);
 
 		return binding;
 	}
-
+	
 	private void reflect(Class<?> view, RegistrationBinder binder)
 	{
 		// check class annotations
@@ -313,17 +305,6 @@ public abstract class LeafModule extends ServletModule
 				}
 			}
 		}
-		
-//		// check field annotations
-//		Field[] fields = view.getDeclaredFields();
-//		for (Field field : fields)
-//		{
-//			Push push = field.getAnnotation(Push.class);
-//			if (push != null)
-//			{
-//				binder.push(field.getName());
-//			}
-//		}
 	}
 
 	public final void global(Exchanger transformer)
@@ -340,5 +321,22 @@ public abstract class LeafModule extends ServletModule
 	public Renderer getRenderer(Settings settings)
 	{
 		return new Renderer(settings.isRemoveSpecialTags(), settings.isRemoveSpecialAttributes());
+	}
+
+	public static void setCurrentRequest(Request request)
+	{
+		requests.set(request);
+	}
+	
+	@Provides
+	public Request getRequest()
+	{
+		return requests.get();
+	}
+	
+	@Provides
+	public Locale getLocale()
+	{
+		return getRequest().getLocale();
 	}
 }

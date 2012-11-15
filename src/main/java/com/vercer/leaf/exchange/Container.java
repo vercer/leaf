@@ -45,12 +45,12 @@ public class Container<T> extends Component<T>
 	}
 
 	@Override
-	protected Markup transformComponent(Markup markup)
+	protected Markup exchangeComponent(Markup markup)
 	{
-		return transformContainer(markup);
+		return exchangeContainer(markup);
 	}
 
-	protected final Markup transformContainer(Markup markup)
+	protected final Markup exchangeContainer(Markup markup)
 	{
 		Builder builder = Markup.builder(markup);
 

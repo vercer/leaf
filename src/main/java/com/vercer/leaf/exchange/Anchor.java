@@ -55,7 +55,7 @@ public class Anchor extends Container<URI>
 
 	public Markup transformAnchor(Markup markup)
 	{
-		return super.transformComponent(markup);
+		return super.exchangeComponent(markup);
 	}
 
 	public static void setThreadAbsolute(boolean absolute)
@@ -64,7 +64,7 @@ public class Anchor extends Container<URI>
 	}
 
 	@Override
-	protected final Markup transformComponent(Markup markup)
+	protected final Markup exchangeComponent(Markup markup)
 	{
 		markup = transformAnchor(markup);
 

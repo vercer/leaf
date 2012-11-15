@@ -30,13 +30,15 @@ public abstract class Component<T> implements Exchanger, Provider<T>
 		return provider.get();
 	}
 
-	public Component<?> chain(Component<?> chained)
+	public Component<?> chain(Exchanger chained)
 	{
-		if (this.chained != null)
-		{
-			throw new IllegalStateException("Chained component already set");
-		}
 		this.chained = chained;
+		return this;
+	}
+	
+	public Component<?> chain(Exchanger...components)
+	{
+		this.chained = new CompositeExchanger(components);
 		return this;
 	}
 
@@ -53,11 +55,7 @@ public abstract class Component<T> implements Exchanger, Provider<T>
 			try
 			{
 				beforeTransformComponent();
-				markup = transformComponent(markup);
-				if (chained != null)
-				{
-					markup = chained.exchange(markup);
-				}
+				markup = exchangeComponentAndChained(markup);
 			}
 			finally
 			{
@@ -65,6 +63,16 @@ public abstract class Component<T> implements Exchanger, Provider<T>
 			}
 		}
 
+		return markup;
+	}
+
+	protected Markup exchangeComponentAndChained(Markup markup)
+	{
+		markup = exchangeComponent(markup);
+		if (chained != null)
+		{
+			markup = chained.exchange(markup);
+		}
 		return markup;
 	}
 
@@ -76,7 +84,7 @@ public abstract class Component<T> implements Exchanger, Provider<T>
 	{
 	}
 
-	protected abstract Markup transformComponent(Markup markup);
+	protected abstract Markup exchangeComponent(Markup markup);
 
 	protected boolean isRemoved()
 	{

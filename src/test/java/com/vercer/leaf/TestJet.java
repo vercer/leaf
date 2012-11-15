@@ -1,9 +1,9 @@
-package com.vercer.jet;
+package com.vercer.leaf;
 
 import com.vercer.convert.DirectTypeConverter;
 
 
-public class TestJet extends Jet
+public class TestJet extends Leaf
 {
 	public TestJet()
 	{

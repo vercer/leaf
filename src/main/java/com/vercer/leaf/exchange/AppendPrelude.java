@@ -16,5 +16,4 @@ public class AppendPrelude implements Exchanger
 	{
 		return Markup.builder(markup).prelude(markup.getPrelude() + separator).build();
 	}
-
 }

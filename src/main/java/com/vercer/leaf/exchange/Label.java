@@ -25,7 +25,7 @@ public class Label extends Component<Object>
 	}
 
 	@Override
-	public Markup transformComponent(Markup markup)
+	public Markup exchangeComponent(Markup markup)
 	{
 		String string = get().toString();
 		String html = markup.attribute(Leaf.get().getSettings().getPrefix() + ":html");

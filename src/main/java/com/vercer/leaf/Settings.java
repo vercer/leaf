@@ -1,5 +1,11 @@
 package com.vercer.leaf;
 
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Locale;
+
+import com.google.common.collect.Sets;
+
 import lombok.Getter;
 
 public class Settings
@@ -27,6 +33,19 @@ public class Settings
 
 	@Getter private
 	boolean development;
+
+	@Getter private
+	Collection<Locale> locales = Sets.newTreeSet(new Comparator<Locale>()
+	{
+		@Override
+		public int compare(Locale o1, Locale o2)
+		{
+			return o1.getDisplayName(o1).compareTo(o2.getDisplayName(o2));
+		}
+	});
+	
+	@Getter private
+	Locale defaultLocale = Locale.ENGLISH;
 
 	private Settings()
 	{
@@ -90,6 +109,18 @@ public class Settings
 			removeSpecialAttributes(!development);
 			removeWhiteSpace(!development);
 			removeSpecialTags(true);
+			return this;
+		}
+		
+		public SettingsBuilder addAllowedLocale(Locale locale)
+		{
+			locales.add(locale);
+			return this;
+		}
+		
+		public SettingsBuilder defaultLocale(Locale locale)
+		{
+			Settings.this.defaultLocale = locale;
 			return this;
 		}
 

@@ -1,4 +1,4 @@
-package com.vercer.jet;
+package com.vercer.leaf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,16 +9,16 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.google.common.io.CharStreams;
-import com.vercer.jet.transform.Label;
-import com.vercer.jet.transform.Loop;
-import com.vercer.jet.transform.Transformer;
+import com.vercer.leaf.exchange.Exchanger;
+import com.vercer.leaf.exchange.Label;
+import com.vercer.leaf.exchange.Loop;
 
 public class LoopTest
 {
 	@Test
 	public void repeat() throws IOException
 	{
-		Jet.set(new TestJet());
+		Leaf.set(new TestJet());
 		
 		InputStream is = getClass().getResourceAsStream("LoopTest.html");
 		InputStreamReader isr = new InputStreamReader(is);
@@ -37,13 +37,13 @@ public class LoopTest
 			}
 			
 			@SuppressWarnings("unused")
-			public Transformer getChild()
+			public Exchanger getChild()
 			{
 				return new Label("Hello " + count);
 			}
 		};
 		
-		Markup modified = component.transform(markup);
+		Markup modified = component.exchange(markup);
 		
 		Assert.assertEquals(modified.getChildren().size(), 10);
 	}

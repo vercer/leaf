@@ -1,6 +1,6 @@
-package com.vercer.jet;
+package com.vercer.leaf;
 
-import com.vercer.jet.transform.Label;
+import com.vercer.leaf.exchange.Label;
 
 public class TestPage extends BasePage
 {

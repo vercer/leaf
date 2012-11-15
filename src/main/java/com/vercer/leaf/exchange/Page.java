@@ -65,7 +65,7 @@ public abstract class Page extends Decorator
 			assert head != null : "Outer decorator page markup must be html";
 
 			// return the whole page which has no body or head
-			return super.transformContainer(markup);
+			return super.exchangeContainer(markup);
 		}
 
 		Markup transformed = transformPage(markup);
@@ -86,7 +86,7 @@ public abstract class Page extends Decorator
 
 	protected Markup transformPage(Markup markup)
 	{
-		return super.transformContainer(markup);
+		return super.exchangeContainer(markup);
 	}
 
 	@Override
@@ -133,7 +133,7 @@ public abstract class Page extends Decorator
 			}
 
 			// process the head markup against the page
-			Markup transformed = this.transformContainer(child);
+			Markup transformed = this.exchangeContainer(child);
 
 			return head.exchange(transformed);
 		}
@@ -164,7 +164,7 @@ public abstract class Page extends Decorator
 	protected Markup transformBody(Markup child)
 	{
 		// use this page to get fields
-		return this.transformContainer(child);
+		return this.exchangeContainer(child);
 	}
 
 	public class Head implements Exchanger

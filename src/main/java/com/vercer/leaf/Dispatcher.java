@@ -1,16 +1,12 @@
 package com.vercer.leaf;
 
-
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,28 +17,21 @@ import com.google.inject.BindingAnnotation;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
-import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 import com.google.inject.Singleton;
 import com.vercer.convert.TypeConverter;
 import com.vercer.generics.Generics;
 import com.vercer.leaf.Markup.Source;
-import com.vercer.leaf.annotation.Capture;
-import com.vercer.leaf.annotation.Default;
 import com.vercer.leaf.annotation.Parameter;
-import com.vercer.leaf.annotation.Pull;
 
 @Singleton
 public class Dispatcher
 {
 	private static final Object NOT_SET = new Object();
 
+	@Inject Set<Director> directors;
 	@Inject Injector injector;
 	@Inject TypeConverter converter;
-	@Inject Provider<HttpServletRequest> requests;
-
-	private final List<Registration> bindings;
-	private final ParametersProxyHandler handler = new ParametersProxyHandler();
 
 	public static class Registration
 	{
@@ -75,12 +64,6 @@ public class Dispatcher
 		}
 		Predicate<HttpServletRequest> predicate;
 		Method method;
-	}
-
-	@Inject
-	public Dispatcher(List<Registration> bindings)
-	{
-		this.bindings = bindings;
 	}
 
 	public boolean dispatch(HttpServletRequest request, HttpServletResponse response) throws Throwable
@@ -124,166 +107,117 @@ public class Dispatcher
 		}
 	}
 
-	public boolean handle(HttpServletRequest request, HttpServletResponse httpServletResponse, Throwable throwable) throws Throwable
+	public boolean handle(HttpServletRequest hreq, HttpServletResponse hres, Throwable throwable) throws Throwable
 	{
-		for (Registration binding : bindings)
+		for (Director director : directors)
 		{
-			// show error handlers only after catching an throwing that matches
-			if (throwable != null && binding.throwing == null ||
-				throwable != null && !binding.throwing.isAssignableFrom(throwable.getClass()) ||
-				throwable == null && binding.throwing != null)
-
-				continue;
-
-			String path = request.getRequestURI();
-			int sessionIdIndex = path.indexOf(";jsessionid=");
-			if (sessionIdIndex > 0)
+			Request request = director.direct(hreq, throwable);
+			if (request != null)
 			{
-				path = path.substring(0, sessionIdIndex);
-			}
-
-			Matcher matcher = binding.pattern.matcher(path);
-			if (matcher.matches() && (binding.predicate == null || binding.predicate.apply(request)))
-			{
-				// get our target object that will supply a reply
-				Object target;
-				if (binding.receivingInstance == null)
+				LeafModule.setCurrentRequest(request);
+				try
 				{
-					target = injector.getInstance(binding.receivingClass);
+					Object result = call(request, hreq);
+					Response response = response(result, hres);
+					response.respond(hres);
+					return true;
 				}
-				else
+				finally
 				{
-					target = binding.receivingInstance;
+					LeafModule.setCurrentRequest(null);
 				}
-				
-				// execute an event method to get a reply
-				Object result = null;
-				if (binding.events != null)
-				{
-					for (PredicateMethod pm : binding.events)
-					{
-						if (pm.predicate == null || pm.predicate.apply(request))
-						{
-							result = call(target, pm.method, matcher);
-							
-							// only execute one event to get our result
-							break;
-						}
-					}
-				}
-
-				// convert the result object to a reply
-				Response reply;
-				if (result instanceof Response)
-				{
-					reply = (Response) result;
-				}
-				else
-				{
-					// if no result then use the target itself as result
-					if (result == null)
-					{
-						if (target instanceof Markup.Source)
-						{
-							// hard code markup response to save some cycles
-							reply = Response.withMarkup((Source) target);
-						}
-						else
-						{
-							reply = converter.convert(target, Response.class);
-						}
-					}
-					else
-					{
-						reply = converter.convert(result, Response.class);
-					}
-
-					if (reply == null)
-					{
-						throw new IllegalArgumentException("Could not create response from " + target);
-					}
-
-					// unless a reply explicitly sets the status use 500 for errors
-					if (throwable != null && reply.getStatus() == null)
-					{
-						reply.status(500);
-					}
-				}
-
-				reply.respond(httpServletResponse);
-
-				return true;
 			}
 		}
-
 		return false;
 	}
-
-	private Object call(Object receiver, Method method, Matcher matcher) throws Throwable
+	
+	private Response response(Object result, HttpServletResponse hres)
 	{
-		Type[] types = method.getGenericParameterTypes();
-		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+		// convert the result object to a reply
+		Response reply;
+		if (result instanceof Response)
+		{
+			reply = (Response) result;
+		}
+		else
+		{
+			// if no result then use the target itself as result
+			if (result instanceof Markup.Source)
+			{
+				// hard code markup response to save some cycles
+				reply = Response.withMarkup((Source) result);
+			}
+			else
+			{
+				// use the converter for everything else so we can override
+				reply = converter.convert(result, Response.class);
+			}
+
+			if (reply == null)
+			{
+				throw new IllegalArgumentException("Could not create response from " + result);
+			}
+		}
+		return reply;
+	}
+
+	private Object call(Request request, HttpServletRequest hreq) throws Throwable
+	{
+		Type[] types = request.getMethod().getGenericParameterTypes();
+		Annotation[][] parameterAnnotations = request.getMethod().getParameterAnnotations();
 		Object[] parameters = new Object[types.length];
 		for (int i = 0; i < types.length; i++)
 		{
 			Type type = types[i];
-			Class<?> erased = Generics.erase(type);
 			Annotation[] annotations = parameterAnnotations[i];
 
 			Object parameter = NOT_SET;
 			for (Annotation annotation : annotations)
 			{
-				// first look for @Pull annotations
-				if (annotation.annotationType() == Pull.class)
-				{
-					// make a proxy for the interface
-					parameter = Proxy.newProxyInstance(
-							getClass().getClassLoader(),
-							new Class[] {erased},
-							handler);
-				}
-				else if (annotation.annotationType() == Parameter.class)
+				if (annotation.annotationType() == Parameter.class)
 				{
 					String name = ((Parameter) annotation).value();
-					String[] values = requests.get().getParameterValues(name);
+					String[] values = hreq.getParameterValues(name);
 					parameter = parametersToArgument(type, values);
 				}
-				else if (annotation.annotationType() == Capture.class)
+				else if (annotation.annotationType().isAnnotationPresent(BindingAnnotation.class))
 				{
-					int group = ((Capture) annotation).value();
-					String value = matcher.group(group);
-					parameter = converter.convert(value, String.class, type);
+					// allow passing in special bound objects like request parameters
+					parameter = injector.getInstance(Key.get(type, annotation));
 				}
 				else
 				{
-					// allow passing in special bound objects like request parameters
-					if (annotation.annotationType().isAnnotationPresent(BindingAnnotation.class))
-					{
-						parameter = injector.getInstance(Key.get(type, annotation));
-					}
-					break;
+					parameter = request.parameter(type, annotation);
 				}
+				if (parameter != null) break;
 			}
 
 			// no annotation so just inject it normally
 			if (parameter == NOT_SET)
 			{
-				if (type.equals(MatchResult.class))
-				{
-					parameter = matcher.toMatchResult();
-				}
-				else
-				{
-					parameter = injector.getInstance(Key.get(type));
-				}
+				parameter = injector.getInstance(Key.get(type));
 			}
 
 			parameters[i] = parameter;
 		}
-		return method.invoke(receiver, parameters);
+		
+		// create the actual target page
+		Object target = request.target(injector);
+		
+		// call a method on it to 
+		Object result = request.getMethod().invoke(target, parameters);
+		
+		if (result == null)
+		{
+			return target;
+		}
+		else
+		{
+			return result;
+		}
 	}
-
-	private Object parametersToArgument(Type type, String[] values)
+	
+	protected Object parametersToArgument(Type type, String[] values)
 	{
 		// if we have a single value treat it as a String (not array)
 		Class<?> erased = Generics.erase(type);
@@ -305,39 +239,6 @@ public class Dispatcher
 				value = values[0];
 			}
 			return converter.convert(value, String.class, type);
-		}
-	}
-
-	public class ParametersProxyHandler implements InvocationHandler
-	{
-		@Override
-		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
-		{
-			if (args != null)
-			{
-				throw new IllegalStateException("Cannot pass args to request parameter proxy");
-			}
-
-			String name = method.getName();
-			if (name.startsWith("get"))
-			{
-				name = name.substring(3);
-			}
-			else if(name.startsWith("is"))
-			{
-				name = name.substring(2);
-			}
-			String[] values = requests.get().getParameterValues(name);
-			if (values == null)
-			{
-				Default def = method.getAnnotation(Default.class);
-				if (def != null)
-				{
-					values = def.value();
-				}
-			}
-
-			return parametersToArgument(method.getReturnType(), values);
 		}
 	}
 }
