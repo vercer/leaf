@@ -1,4 +1,4 @@
-package com.vercer.leaf.exchange;
+package com.vercer.leaf.html;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,6 +8,7 @@ import com.google.common.io.CharStreams;
 import com.vercer.leaf.Leaf;
 import com.vercer.leaf.Markup;
 import com.vercer.leaf.Markup.Builder;
+import com.vercer.leaf.exchange.Exchanger;
 
 public class InlineSource implements Exchanger
 {

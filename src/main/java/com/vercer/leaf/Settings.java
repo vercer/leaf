@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Locale;
 
-import com.google.common.collect.Sets;
-
 import lombok.Getter;
+
+import com.google.common.collect.Sets;
 
 public class Settings
 {

@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import com.google.common.collect.Iterators;
 import com.google.inject.Provider;
+import com.vercer.leaf.utility.IterableToIteratorProvider;
 
 public abstract class Repeat<T> extends Loop<Iterator<T>>
 {

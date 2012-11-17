@@ -1,10 +1,12 @@
-package com.vercer.leaf.exchange;
+package com.vercer.leaf.html;
 
 import java.util.List;
 
 import com.vercer.leaf.Leaf;
 import com.vercer.leaf.Markup;
 import com.vercer.leaf.Markup.Builder;
+import com.vercer.leaf.exchange.Decorator;
+import com.vercer.leaf.exchange.Exchanger;
 import com.vercer.leaf.Parser;
 
 public abstract class Page extends Decorator

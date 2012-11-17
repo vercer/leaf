@@ -1,10 +1,11 @@
-package com.vercer.leaf.exchange;
+package com.vercer.leaf.html;
 
 import java.net.URI;
 
 import com.google.inject.Provider;
 import com.vercer.leaf.Markup;
 import com.vercer.leaf.Markup.Builder;
+import com.vercer.leaf.exchange.Component;
 
 public class Image extends Component<URI>
 {

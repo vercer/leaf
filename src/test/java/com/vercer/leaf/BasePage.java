@@ -1,7 +1,7 @@
 package com.vercer.leaf;
 
 import com.vercer.leaf.exchange.Label;
-import com.vercer.leaf.exchange.Page;
+import com.vercer.leaf.html.Page;
 
 public class BasePage extends Page
 {

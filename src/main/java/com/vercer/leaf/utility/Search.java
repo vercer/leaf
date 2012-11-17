@@ -6,7 +6,7 @@ import java.util.Collection;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.vercer.leaf.annotation.Handle.Http;
-import com.vercer.leaf.exchange.Anchor;
+import com.vercer.leaf.html.Anchor;
 
 public class Search
 {

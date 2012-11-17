@@ -1,9 +1,10 @@
-package com.vercer.leaf.exchange;
+package com.vercer.leaf.html;
 
 import java.net.URI;
 
 import com.vercer.leaf.Markup;
 import com.vercer.leaf.annotation.Discriminator;
+import com.vercer.leaf.exchange.Component;
 
 public class FormButton extends Component<URI>
 {

@@ -1,4 +1,4 @@
-package com.vercer.leaf.exchange;
+package com.vercer.leaf.html;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -16,6 +16,7 @@ import com.google.inject.util.Providers;
 import com.vercer.leaf.Leaf;
 import com.vercer.leaf.Markup;
 import com.vercer.leaf.Markup.Builder;
+import com.vercer.leaf.exchange.Container;
 
 public class Anchor extends Container<URI>
 {
