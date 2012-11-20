@@ -20,7 +20,7 @@ import com.vercer.leaf.Markup.Builder;
 
 public class Container<T> extends Component<T>
 {
-	private static final String CHILD_NAME_ATTRIBUTE = ":id";
+	private static final String PROPERTY_ATTRIBUTE = ":x";
 	
 	@Inject	private static Set<Exchanger> globals = new HashSet<Exchanger>();
 
@@ -81,7 +81,7 @@ public class Container<T> extends Component<T>
 	{
 		// TODO change id to field
 		// find child transformers by id and remove attribute
-		String childMarkupId = child.getAttributes().get(Leaf.get().getSettings().getPrefix() + CHILD_NAME_ATTRIBUTE);
+		String childMarkupId = child.getAttributes().get(Leaf.get().getSettings().getPrefix() + PROPERTY_ATTRIBUTE);
 
 		// we cannot process this markup but another transformer may
 		if (childMarkupId == null) return child;

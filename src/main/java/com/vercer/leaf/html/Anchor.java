@@ -26,6 +26,7 @@ public class Anchor extends Container<URI>
 	private final Provider<String> title;
 	private Multimap<String, Object> parameters;
 	private boolean absolute;
+	private String frame;
 
 	public Anchor(URI uri)
 	{
@@ -39,7 +40,13 @@ public class Anchor extends Container<URI>
 
 	public Anchor(URI href, String title)
 	{
+		this(href, title, null);
+	}
+	
+	public Anchor(URI href, String title, String frame)
+	{
 		super(href);
+		this.frame = frame;
 		this.title = title == null ? null : Providers.of(title);
 	}
 
@@ -76,6 +83,11 @@ public class Anchor extends Container<URI>
 		if (title != null)
 		{
 			result.attribute("title", title.get());
+		}
+		
+		if (frame != null)
+		{
+			result.attribute("target", frame);
 		}
 
 		// transform the contained markup
