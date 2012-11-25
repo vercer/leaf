@@ -30,16 +30,14 @@ public abstract class Component<T> implements Exchanger, Provider<T>
 		return provider.get();
 	}
 
-	public Component<?> chain(Exchanger chained)
+	public void chain(Exchanger chained)
 	{
 		this.chained = chained;
-		return this;
 	}
 	
-	public Component<?> chain(Exchanger...components)
+	public void chain(Exchanger...components)
 	{
 		this.chained = new CompositeExchanger(components);
-		return this;
 	}
 
 	@Override
