@@ -3,9 +3,9 @@ package com.vercer.leaf.convert;
 import com.google.inject.Inject;
 import com.vercer.convert.Converter;
 import com.vercer.convert.TypeConverter;
-import com.vercer.leaf.Response;
+import com.vercer.leaf.Reply;
 
-public class ObjectToResponse implements Converter<Object, Response>
+public class ObjectToResponse implements Converter<Object, Reply>
 {
 	private final TypeConverter converter;
 
@@ -16,9 +16,9 @@ public class ObjectToResponse implements Converter<Object, Response>
 	}
 
 	@Override
-	public Response convert(Object input)
+	public Reply convert(Object input)
 	{
 		Object string = converter.convert(input, String.class);
-		return converter.convert(string, Response.class);
+		return converter.convert(string, Reply.class);
 	}
 }

@@ -111,14 +111,14 @@ public class Dispatcher
 	{
 		for (Director director : directors)
 		{
-			Request request = director.direct(hreq, throwable);
+			Target request = director.direct(hreq, throwable);
 			if (request != null)
 			{
 				LeafModule.setCurrentRequest(request);
 				try
 				{
 					Object result = call(request, hreq);
-					Response response = response(result, hres);
+					Reply response = response(result, hres);
 					response.respond(hres);
 					return true;
 				}
@@ -131,13 +131,13 @@ public class Dispatcher
 		return false;
 	}
 	
-	private Response response(Object result, HttpServletResponse hres)
+	private Reply response(Object result, HttpServletResponse hres)
 	{
 		// convert the result object to a reply
-		Response reply;
-		if (result instanceof Response)
+		Reply reply;
+		if (result instanceof Reply)
 		{
-			reply = (Response) result;
+			reply = (Reply) result;
 		}
 		else
 		{
@@ -145,12 +145,12 @@ public class Dispatcher
 			if (result instanceof Markup.Source)
 			{
 				// hard code markup response to save some cycles
-				reply = Response.withMarkup((Source) result);
+				reply = Reply.withMarkup((Source) result);
 			}
 			else
 			{
 				// use the converter for everything else so we can override
-				reply = converter.convert(result, Response.class);
+				reply = converter.convert(result, Reply.class);
 			}
 
 			if (reply == null)
@@ -161,8 +161,16 @@ public class Dispatcher
 		return reply;
 	}
 
-	private Object call(Request request, HttpServletRequest hreq) throws Throwable
+	private Object call(Target request, HttpServletRequest hreq) throws Throwable
 	{
+		// create the actual target page
+		Object target = request.receiver(injector);
+		
+		if (request.getMethod() == null)
+		{
+			return target;
+		}
+		
 		Type[] types = request.getMethod().getGenericParameterTypes();
 		Annotation[][] parameterAnnotations = request.getMethod().getParameterAnnotations();
 		Object[] parameters = new Object[types.length];
@@ -200,9 +208,6 @@ public class Dispatcher
 
 			parameters[i] = parameter;
 		}
-		
-		// create the actual target page
-		Object target = request.target(injector);
 		
 		// call a method on it to 
 		Object result = request.getMethod().invoke(target, parameters);

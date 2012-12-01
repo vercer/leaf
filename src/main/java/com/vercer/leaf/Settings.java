@@ -34,6 +34,7 @@ public class Settings
 	@Getter private
 	boolean development;
 
+	//TODO remove this - belongs with application code
 	@Getter private
 	Collection<Locale> locales = Sets.newTreeSet(new Comparator<Locale>()
 	{

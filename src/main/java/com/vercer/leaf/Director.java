@@ -23,7 +23,7 @@ import com.vercer.leaf.annotation.Capture;
 @ImplementedBy(DefaultDirector.class)
 public interface Director
 {
-	public Request direct(HttpServletRequest http, Throwable throwable);
+	public Target direct(HttpServletRequest http, Throwable throwable);
 
 	public static class DefaultDirector implements Director
 	{
@@ -40,7 +40,7 @@ public interface Director
 		}
 
 		@Override
-		public Request direct(HttpServletRequest http, Throwable throwable)
+		public Target direct(HttpServletRequest http, Throwable throwable)
 		{
 			String path = path(http);
 
@@ -53,62 +53,28 @@ public interface Director
 
 					continue;
 
+				if (binding.pattern == null)
+				{
+					throw new IllegalStateException("No pattern for " + binding.getTargetClass());
+				}
+				
 				final Matcher matcher = binding.pattern.matcher(path);
 				if (matcher.matches() && (binding.predicate == null || binding.predicate.apply(http)))
 				{
 					// execute an event method to get a reply
+					Method method = null;
 					if (binding.events != null)
 					{
-						for (final PredicateMethod pm : binding.events)
+						for (final PredicateMethod candidate : binding.events)
 						{
-							if (pm.predicate == null || pm.predicate.apply(http))
+							if (candidate.predicate == null || candidate.predicate.apply(http))
 							{
-								return new Request()
-								{
-									@Override
-									public Object target(Injector injector)
-									{
-										if (binding.receivingInstance == null)
-										{
-											return injector.getInstance(binding.receivingClass);
-										}
-										else
-										{
-											return binding.receivingInstance;
-										}
-									}
-
-									@Override
-									public Object parameter(Type type, Annotation annotation)
-									{
-										if (type.equals(MatchResult.class))
-										{
-											return matcher.toMatchResult();
-										}
-										else if (annotation.annotationType() == Capture.class)
-										{
-											int group = ((Capture) annotation).value();
-											String text = matcher.group(group);
-											return converter.convert(text, type);
-										}
-										return null;
-									}
-
-									@Override
-									public Method getMethod()
-									{
-										return pm.method;
-									}
-
-									@Override
-									public Locale getLocale()
-									{
-										return requests.get().getLocale();
-									}
-								};
+								method = candidate.method;
 							}
 						}
 					}
+					
+					return new MatcherTarget(method, binding, matcher, converter, requests.get().getLocale());
 				}
 			}
 			return null;
@@ -124,5 +90,65 @@ public interface Director
 			}
 			return path;
 		}
+		
+		private static class MatcherTarget extends Target
+		{
+			private final Method method;
+			private final Registration binding;
+			private final Matcher matcher;
+			private final TypeConverter converter;
+			private final Locale locale;
+			
+			public MatcherTarget(Method method, Registration binding, Matcher matcher, TypeConverter converter, Locale locale)
+			{
+				this.method = method;
+				this.binding = binding;
+				this.matcher = matcher;
+				this.converter = converter;
+				this.locale = locale;
+			}
+			
+			@Override
+			public Object receiver(Injector injector)
+			{
+				if (binding.receivingInstance == null)
+				{
+					return injector.getInstance(binding.receivingClass);
+				}
+				else
+				{
+					return binding.receivingInstance;
+				}
+			}
+			
+			@Override
+			public Object parameter(Type type, Annotation annotation)
+			{
+				if (type.equals(MatchResult.class))
+				{
+					return matcher.toMatchResult();
+				}
+				else if (annotation.annotationType() == Capture.class)
+				{
+					int group = ((Capture) annotation).value();
+					String text = matcher.group(group);
+					return converter.convert(text, type);
+				}
+				return null;
+			}
+			
+			@Override
+			public Method getMethod()
+			{
+				return method;
+			}
+			
+			@Override
+			public Locale getLocale()
+			{
+				return locale;
+			}
+		}
 	}
+	
 }

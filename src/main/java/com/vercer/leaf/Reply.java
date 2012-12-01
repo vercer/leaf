@@ -10,7 +10,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
-public abstract class Response
+public abstract class Reply
 {
 	private List<Header> headers;
 	private Integer status = 200;
@@ -78,34 +78,34 @@ public abstract class Response
 		Object value;
 	}
 
-	public static Response withMarkup(Markup.Source source)
+	public static Reply withMarkup(Markup.Source source)
 	{
 		return new Html(source.getMarkup());
 	}
 
-	public static Response withMarkup(Markup markup)
+	public static Reply withMarkup(Markup markup)
 	{
 		return new Html(markup);
 	}
 
-	public static Response withText(String text)
+	public static Reply withText(String text)
 	{
 		return new Text(text);
 	}
 
-	public Response header(String name, String value)
+	public Reply header(String name, String value)
 	{
 		addHeader(name, value);
 		return this;
 	}
 
-	public Response header(String name, Date value)
+	public Reply header(String name, Date value)
 	{
 		addHeader(name, value);
 		return this;
 	}
 
-	public Response header(String name, int value)
+	public Reply header(String name, int value)
 	{
 		addHeader(name, value);
 		return this;
@@ -113,7 +113,7 @@ public abstract class Response
 
 	// TODO add timed caching - not enum
 	public enum Cache { NEVER };
-	public Response cache(Cache cache)
+	public Reply cache(Cache cache)
 	{
 		if (cache == Cache.NEVER)
 		{
@@ -125,13 +125,13 @@ public abstract class Response
 		return this;
 	}
 
-	public Response status(int code)
+	public Reply status(int code)
 	{
 		this.status = code;
 		return this;
 	}
 	
-	public Response type(String type)
+	public Reply type(String type)
 	{
 		this.type = type;
 		return this;
@@ -143,7 +143,7 @@ public abstract class Response
 
 		if (headers == null)
 		{
-			headers = new ArrayList<Response.Header>(5);
+			headers = new ArrayList<Reply.Header>(5);
 		}
 		Header header = new Header();
 		header.name = name;
@@ -151,17 +151,17 @@ public abstract class Response
 		headers.add(header);
 	}
 
-	public static Response withRedirect(String location)
+	public static Reply withRedirect(String location)
 	{
 		return new Redirect(location);
 	}
 
-	public static Response withRedirect(URI link)
+	public static Reply withRedirect(URI link)
 	{
 		return new Redirect(link.toASCIIString());
 	}
 
-	public static class Redirect extends Response
+	public static class Redirect extends Reply
 	{
 		public Redirect(String location)
 		{
@@ -184,7 +184,7 @@ public abstract class Response
 		}
 	}
 
-	public static class Text extends Response
+	public static class Text extends Reply
 	{
 		private final String text;
 

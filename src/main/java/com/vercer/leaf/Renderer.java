@@ -10,11 +10,12 @@ import java.util.Map;
 public class Renderer
 {
 	private final boolean removeSpecialTags;
-	private final boolean removeSpecialAttributes; 
+	private final boolean removeSpecialAttributes;
+	private String prefix; 
 	
 	/**
-	 * @param removeSpecialTags Remove tags starting with e.g. "jet:"
-	 * @param removeSpecialAttributes Remove attributes starting with e.g. "jet:"
+	 * @param removeSpecialTags Remove tags starting with the prefix
+	 * @param removeSpecialAttributes Remove attributes starting with the prefix
 	 */
 	public Renderer(boolean removeSpecialTags, boolean removeSpecialAttributes)
 	{
@@ -24,17 +25,21 @@ public class Renderer
 	
 	public String render(Markup markup)
 	{
+		// here because cannot have in constructor as settings have not been injected
+		prefix = Leaf.get().getSettings().getPrefix();
+		
 		StringBuilder builder = new StringBuilder();
 		render(markup, builder);
 		return builder.toString();
+		
 	}
 
 	private void render(Markup markup, StringBuilder builder)
 	{
-		String prefix = Leaf.get().getSettings().getPrefix();
 		builder.append(markup.getPrelude());
 		
-		if (!removeSpecialTags || !markup.getTag().startsWith(prefix))
+		boolean remove = !removeSpecialTags || !markup.getTag().startsWith(prefix + ":");
+		if (remove)
 		{
 			builder.append('<');
 			builder.append(markup.getTag());
@@ -73,7 +78,7 @@ public class Renderer
 		}
 		builder.append(markup.getContent());
 
-		if (!removeSpecialTags || !markup.getTag().startsWith(prefix))
+		if (remove)
 		{
 			builder.append("</");
 			builder.append(markup.getTag());

@@ -47,6 +47,9 @@ public class Leaf
 	@Inject
 	Provider<ServletContext> contexts;
 
+	@Inject
+	Provider<Target> targets;
+
 	@Inject @Getter
 	Settings settings;
 
@@ -81,6 +84,11 @@ public class Leaf
 	public HttpServletResponse getResponse()
 	{
 		return responses.get();
+	}
+	
+	public Target getTarget()
+	{
+		return targets.get();
 	}
 
 	private static final ThreadLocal<Throwable> throwableLocal = new ThreadLocal<Throwable>();

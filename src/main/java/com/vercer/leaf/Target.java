@@ -7,9 +7,9 @@ import java.util.Locale;
 
 import com.google.inject.Injector;
 
-public abstract class Request
+public abstract class Target
 {
-	public abstract Object target(Injector injector);
+	public abstract Object receiver(Injector injector);
 	
 	public abstract Object parameter(Type type, Annotation annotation);
 	

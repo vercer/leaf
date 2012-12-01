@@ -54,7 +54,7 @@ public abstract class LeafModule extends ServletModule
 {
 	private Settings settings;
 	private SettingsBuilder builder = Settings.builder();
-	private static ThreadLocal<Request> requests = new ThreadLocal<Request>();
+	private static ThreadLocal<Target> requests = new ThreadLocal<Target>();
 	
 	public class RegistrationBinder
 	{
@@ -323,13 +323,13 @@ public abstract class LeafModule extends ServletModule
 		return new Renderer(settings.isRemoveSpecialTags(), settings.isRemoveSpecialAttributes());
 	}
 
-	public static void setCurrentRequest(Request request)
+	public static void setCurrentRequest(Target request)
 	{
 		requests.set(request);
 	}
 	
 	@Provides
-	public Request getRequest()
+	public Target getRequest()
 	{
 		return requests.get();
 	}

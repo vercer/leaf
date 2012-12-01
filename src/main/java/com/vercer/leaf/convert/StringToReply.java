@@ -1,13 +1,13 @@
 package com.vercer.leaf.convert;
 
 import com.vercer.convert.Converter;
-import com.vercer.leaf.Response;
+import com.vercer.leaf.Reply;
 
-public class StringToReply implements Converter<String, Response>
+public class StringToReply implements Converter<String, Reply>
 {
 	@Override
-	public Response convert(final String input)
+	public Reply convert(final String input)
 	{
-		return Response.withRedirect(input);
+		return Reply.withRedirect(input);
 	}
 }
