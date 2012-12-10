@@ -18,9 +18,14 @@ import com.vercer.leaf.Leaf;
 import com.vercer.leaf.Markup;
 import com.vercer.leaf.Markup.Builder;
 
-public class Container<T> extends Component<T>
+public abstract class Container<T> extends Component<T>
 {
 	private static final String PROPERTY_ATTRIBUTE = ":x";
+	
+	public interface NeedsParent
+	{
+		void setParent(Container<?> parent);
+	}
 	
 	@Inject	private static Set<Exchanger> globals = new HashSet<Exchanger>();
 
@@ -65,7 +70,7 @@ public class Container<T> extends Component<T>
 				child = global.exchange(child);
 			}
 
-			child = transformChild(child);
+			child = exchangeChild(child);
 
 			// null results are not added (removed)
 			if (child != null)
@@ -77,7 +82,7 @@ public class Container<T> extends Component<T>
 		return builder.build();
 	}
 
-	protected Markup transformChild(Markup child)
+	protected Markup exchangeChild(Markup child)
 	{
 		// TODO change id to field
 		// find child transformers by id and remove attribute
@@ -89,7 +94,10 @@ public class Container<T> extends Component<T>
 		try
 		{
 			Exchanger transformer = transformer(childMarkupId, child);
-
+			if (transformer instanceof NeedsParent)
+			{
+				((NeedsParent) transformer).setParent(this);
+			}
 			return transformer.exchange(child);
 		}
 		catch (Throwable t)
@@ -159,7 +167,10 @@ public class Container<T> extends Component<T>
 			for (PropertyDescriptor descriptor : descriptors)
 			{
 				Method readMethod = descriptor.getReadMethod();
-				readMethod.setAccessible(true);
+				if (readMethod != null)
+				{
+					readMethod.setAccessible(true);
+				}
 				nameToMethod.put(descriptor.getName(), readMethod);
 			}
 

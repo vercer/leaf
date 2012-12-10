@@ -12,8 +12,8 @@ public abstract class DelegatingContainer extends Container<Void>
 	}
 	
 	@Override
-	protected Markup transformChild(Markup child)
+	protected Markup exchangeChild(Markup child)
 	{
-		return delegate.transformChild(child);
+		return delegate.exchangeChild(child);
 	}
 }

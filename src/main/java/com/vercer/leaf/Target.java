@@ -7,6 +7,7 @@ import java.util.Locale;
 
 import com.google.inject.Injector;
 
+// TODO make an abstract class that contains all basic behaviour
 public abstract class Target
 {
 	public abstract Object receiver(Injector injector);

@@ -67,7 +67,7 @@ public abstract class Decorator extends Template
 	}
 
 	@Override
-	protected Markup transformChild(Markup markup)
+	protected Markup exchangeChild(Markup markup)
 	{
 		if (markup.getTag().equals(Leaf.get().getSettings().getPrefix() + ":decorated"))
 		{
@@ -96,7 +96,7 @@ public abstract class Decorator extends Template
 		}
 		else
 		{
-			return super.transformChild(markup);
+			return super.exchangeChild(markup);
 		}
 	}
 }

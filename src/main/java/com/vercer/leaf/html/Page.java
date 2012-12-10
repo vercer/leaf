@@ -117,7 +117,7 @@ public abstract class Page extends Decorator
 	}
 
 	@Override
-	protected final Markup transformChild(Markup child)
+	protected final Markup exchangeChild(Markup child)
 	{
 		if ("head".equals(child.getTag()))
 		{
@@ -159,7 +159,7 @@ public abstract class Page extends Decorator
 		else 
 		{
 			// this method is also called for children of head and body
-			return super.transformChild(child);
+			return super.exchangeChild(child);
 		}
 	}
 

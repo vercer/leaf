@@ -111,26 +111,31 @@ public abstract class LeafModule extends ServletModule
 
 			public RegistrationBinder call(String event)
 			{
-				Method[] methods = registration.getTargetClass().getDeclaredMethods();
+				Method[] methods = registration.getTargetClass().getMethods();
 				for (Method method : methods)
 				{
 					if (method.getName().equals(event))
 					{
-						if (registration.events == null)
-						{
-							registration.events = new ArrayList<Dispatcher.PredicateMethod>(2);
-						}
-						
-						if (http != Http.ALL)
-						{
-							andPredicate(new HttpMethodPredicate(http));
-						}
-						
-						registration.events.add(new PredicateMethod(predicate, method));
-						return RegistrationBinder.this;
+						return call(method);
 					}
 				}
-				throw new IllegalArgumentException("Could not find method " + event);
+				throw new IllegalArgumentException("Could not find method " + event + " on " + registration.getTargetClass());
+			}
+
+			public RegistrationBinder call(Method method)
+			{
+				if (registration.events == null)
+				{
+					registration.events = new ArrayList<Dispatcher.PredicateMethod>(2);
+				}
+				
+				if (http != Http.ALL)
+				{
+					andPredicate(new HttpMethodPredicate(http));
+				}
+				
+				registration.events.add(new PredicateMethod(predicate, method));
+				return RegistrationBinder.this;
 			}
 		}
 	}
@@ -284,8 +289,7 @@ public abstract class LeafModule extends ServletModule
 		}
 		
 		// check method annotations
-		// TODO check superclass fields and methods
-		Method[] methods = view.getDeclaredMethods();
+		Method[] methods = view.getMethods();
 		for (Method method : methods)
 		{
 			Handle on = method.getAnnotation(Handle.class);
@@ -301,7 +305,7 @@ public abstract class LeafModule extends ServletModule
 					{
 						eb.parameter(parameter.name(), parameter.value());
 					}
-					eb.call(method.getName());
+					eb.call(method);
 				}
 			}
 		}

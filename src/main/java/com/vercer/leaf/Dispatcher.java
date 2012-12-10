@@ -22,6 +22,7 @@ import com.google.inject.Singleton;
 import com.vercer.convert.TypeConverter;
 import com.vercer.generics.Generics;
 import com.vercer.leaf.Markup.Source;
+import com.vercer.leaf.annotation.Cookie;
 import com.vercer.leaf.annotation.Parameter;
 
 @Singleton
@@ -161,18 +162,18 @@ public class Dispatcher
 		return reply;
 	}
 
-	private Object call(Target request, HttpServletRequest hreq) throws Throwable
+	private Object call(Target target, HttpServletRequest request) throws Throwable
 	{
 		// create the actual target page
-		Object target = request.receiver(injector);
+		Object receiver = target.receiver(injector);
 		
-		if (request.getMethod() == null)
+		if (target.getMethod() == null)
 		{
-			return target;
+			return receiver;
 		}
 		
-		Type[] types = request.getMethod().getGenericParameterTypes();
-		Annotation[][] parameterAnnotations = request.getMethod().getParameterAnnotations();
+		Type[] types = target.getMethod().getGenericParameterTypes();
+		Annotation[][] parameterAnnotations = target.getMethod().getParameterAnnotations();
 		Object[] parameters = new Object[types.length];
 		for (int i = 0; i < types.length; i++)
 		{
@@ -185,8 +186,21 @@ public class Dispatcher
 				if (annotation.annotationType() == Parameter.class)
 				{
 					String name = ((Parameter) annotation).value();
-					String[] values = hreq.getParameterValues(name);
+					String[] values = request.getParameterValues(name);
 					parameter = parametersToArgument(type, values);
+				}
+				else if (annotation.annotationType() == Cookie.class)
+				{
+					String name = ((Cookie) annotation).value();
+					javax.servlet.http.Cookie[] cookies = request.getCookies();
+					for (javax.servlet.http.Cookie cookie : cookies)
+					{
+						if (cookie.getName().equals(name))
+						{
+							parameter = converter.convert(cookie, type);
+							break;
+						}
+					}
 				}
 				else if (annotation.annotationType().isAnnotationPresent(BindingAnnotation.class))
 				{
@@ -195,7 +209,8 @@ public class Dispatcher
 				}
 				else
 				{
-					parameter = request.parameter(type, annotation);
+					// ask the request for the parameter
+					parameter = target.parameter(type, annotation);
 				}
 				if (parameter != null) break;
 			}
@@ -210,11 +225,11 @@ public class Dispatcher
 		}
 		
 		// call a method on it to 
-		Object result = request.getMethod().invoke(target, parameters);
+		Object result = target.getMethod().invoke(receiver, parameters);
 		
 		if (result == null)
 		{
-			return target;
+			return receiver;
 		}
 		else
 		{

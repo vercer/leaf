@@ -131,6 +131,7 @@ public interface Director
 				else if (annotation.annotationType() == Capture.class)
 				{
 					int group = ((Capture) annotation).value();
+					if (matcher.groupCount() < group) return null;
 					String text = matcher.group(group);
 					return converter.convert(text, type);
 				}
