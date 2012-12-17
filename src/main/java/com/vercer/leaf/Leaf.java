@@ -45,9 +45,6 @@ public class Leaf
 	Provider<HttpServletResponse> responses;
 
 	@Inject
-	Provider<ServletContext> contexts;
-
-	@Inject
 	Provider<Target> targets;
 
 	@Inject @Getter
@@ -106,6 +103,6 @@ public class Leaf
 
 	public ServletContext getServletContext()
 	{
-		return contexts.get();
+		return injector.getInstance(ServletContext.class);
 	}
 }

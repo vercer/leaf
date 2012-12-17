@@ -43,7 +43,7 @@ import com.vercer.leaf.annotation.Match;
 import com.vercer.leaf.convert.BooleanToTransformer;
 import com.vercer.leaf.convert.ObjectToLabel;
 import com.vercer.leaf.convert.ObjectToResponse;
-import com.vercer.leaf.convert.StringToLabel;
+import com.vercer.leaf.convert.CharSequenceToLabel;
 import com.vercer.leaf.convert.StringToReply;
 import com.vercer.leaf.convert.UriToAnchor;
 import com.vercer.leaf.convert.UrlToAnchor;
@@ -206,7 +206,7 @@ public abstract class LeafModule extends ServletModule
 		converters.addBinding().to(ArrayToList.class);
 		converters.addBinding().toInstance(new ObjectToString());
 		converters.addBinding().toInstance(new ThrowableToString());
-		converters.addBinding().toInstance(new StringToLabel());
+		converters.addBinding().toInstance(new CharSequenceToLabel());
 		converters.addBinding().toInstance(new BooleanToTransformer());
 		converters.addBinding().toInstance(new UriToAnchor());
 		converters.addBinding().toInstance(new UrlToAnchor());

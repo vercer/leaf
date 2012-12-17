@@ -55,11 +55,12 @@ public class RepeatTest extends Template
 		return new Repeat<String>(dayNames)
 		{
 			@Getter
-			Label day = new Label(this.getItemProvider());
+			Label day;
 
 			@Override
 			protected void populate(String item)
 			{
+				day = new Label(item);
 			}
 		};
 	}

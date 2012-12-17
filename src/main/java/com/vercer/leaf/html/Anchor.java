@@ -18,7 +18,7 @@ import com.vercer.leaf.Markup;
 import com.vercer.leaf.Markup.Builder;
 import com.vercer.leaf.exchange.Container;
 
-public class Anchor extends Container<URI>
+public class Anchor extends Container
 {
 	private static List<String> stickies;
 	private static ThreadLocal<Boolean> threadAbsolute = new ThreadLocal<Boolean>();
@@ -27,6 +27,7 @@ public class Anchor extends Container<URI>
 	private Multimap<String, Object> parameters;
 	private boolean absolute;
 	private String frame;
+	private URI uri;
 
 	public Anchor(URI uri)
 	{
@@ -45,15 +46,9 @@ public class Anchor extends Container<URI>
 	
 	public Anchor(URI href, String title, String frame)
 	{
-		super(href);
+		this.uri = href;
 		this.frame = frame;
 		this.title = title == null ? null : Providers.of(title);
-	}
-
-	public Anchor(Provider<URI> href, Provider<String> title)
-	{
-		super(href);
-		this.title = title;
 	}
 
 	public Anchor(String href, String title)
@@ -96,12 +91,11 @@ public class Anchor extends Container<URI>
 
 	public URI toUri()
 	{
-		String uri = get().toString();
 		StringBuilder builder = null;
 
 		if (stickies != null && !stickies.isEmpty())
 		{
-			builder = new StringBuilder(uri);
+			builder = new StringBuilder(uri.toASCIIString());
 			HttpServletRequest request = Leaf.get().getRequest();
 			for (String  parameter : stickies)
 			{
@@ -114,7 +108,7 @@ public class Anchor extends Container<URI>
 		{
 			if (builder == null)
 			{
-				builder = new StringBuilder(uri);
+				builder = new StringBuilder(uri.toASCIIString());
 			}
 
 			for (String  parameter : parameters.keySet())
@@ -127,25 +121,31 @@ public class Anchor extends Container<URI>
 			}
 		}
 
+		String string;
 		if (builder != null)
 		{
-			uri = builder.toString();
+			string = builder.toString();
+		}
+		else
+		{
+			string = uri.toASCIIString();
 		}
 
 		// add session id if enabled
 		if (Leaf.get().getSettings().isSessionEncoded())
 		{
-			uri = Leaf.get().getResponse().encodeURL(uri);
+			string = Leaf.get().getResponse().encodeURL(string);
 		}
 
 		if (absolute || threadAbsolute.get() == Boolean.TRUE)
 		{
 			HttpServletRequest request = Leaf.get().getRequest();
 			URI current = URI.create(request.getRequestURL().toString());
-			URI resolved = current.resolve(uri);
-			uri = resolved.toString();
+			URI resolved = current.resolve(string);
+			string = resolved.toString();
 		}
-		return URI.create(uri);
+		
+		return URI.create(string);
 	}
 
 	public static void addNotNullParameter(StringBuilder builder, String name, Object value)

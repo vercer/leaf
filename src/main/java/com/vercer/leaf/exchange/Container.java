@@ -12,19 +12,18 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.vercer.convert.TypeConverter;
 import com.vercer.leaf.Leaf;
 import com.vercer.leaf.Markup;
 import com.vercer.leaf.Markup.Builder;
 
-public abstract class Container<T> extends Component<T>
+public abstract class Container extends Component
 {
 	private static final String PROPERTY_ATTRIBUTE = ":x";
 	
 	public interface NeedsParent
 	{
-		void setParent(Container<?> parent);
+		void setParent(Container parent);
 	}
 	
 	@Inject	private static Set<Exchanger> globals = new HashSet<Exchanger>();
@@ -37,16 +36,6 @@ public abstract class Container<T> extends Component<T>
 
 	public Container()
 	{
-	}
-
-	public Container(Provider<? extends T> provider)
-	{
-		super(provider);
-	}
-
-	public Container(T value)
-	{
-		super(value);
 	}
 
 	@Override
@@ -84,7 +73,6 @@ public abstract class Container<T> extends Component<T>
 
 	protected Markup exchangeChild(Markup child)
 	{
-		// TODO change id to field
 		// find child transformers by id and remove attribute
 		String childMarkupId = child.getAttributes().get(Leaf.get().getSettings().getPrefix() + PROPERTY_ATTRIBUTE);
 
@@ -102,7 +90,7 @@ public abstract class Container<T> extends Component<T>
 		}
 		catch (Throwable t)
 		{
-			throw new TransformException("Problem transforming " + childMarkupId, child, t);
+			throw new ExchangeException("Problem transforming " + childMarkupId, child, t);
 		}
 	}
 
@@ -113,7 +101,7 @@ public abstract class Container<T> extends Component<T>
 
 		if (getter == null)
 		{
-			throw new TransformException("No transformer for " + id, markup);
+			throw new ExchangeException("No transformer for " + id, markup);
 		}
 
 		try
@@ -141,11 +129,10 @@ public abstract class Container<T> extends Component<T>
 				throw new RuntimeException(e);
 			}
 		}
-
 	}
 
 	private static final Map<Class<?>, Map<String, Method>> classToNameToMethod = Maps.newConcurrentMap();
-	public static Map<String, Method> getAccessibleReadMethods(Class<?> clazz)
+	private static Map<String, Method> getAccessibleReadMethods(Class<?> clazz)
 	{
 		Map<String, Method> nameToMethod = classToNameToMethod.get(clazz);
 

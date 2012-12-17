@@ -195,6 +195,19 @@ public class Markup implements Cloneable
 			return this;
 		}
 
+		public Builder appendAttribute(String name, String seperator, String value)
+		{
+			String existing = markup.getAttribute(name);
+			if (existing == null)
+			{
+				return attribute(name, value);
+			}
+			else
+			{
+				return attribute(name, existing + seperator + value);
+			}
+		}
+
 	}
 
 	public static Builder builder()
@@ -231,9 +244,14 @@ public class Markup implements Cloneable
 		}
 	}
 	
-	public String attribute(String name)
+	public String getAttribute(String name)
 	{
 		return attributes == null ? null : attributes.get(name);
+	}
+	
+	public String getSpecialAttribute(String name)
+	{
+		return getAttribute(Leaf.get().getSettings().getPrefix() + ":" + name);
 	}
 
 	public interface Source

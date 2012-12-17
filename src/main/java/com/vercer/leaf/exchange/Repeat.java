@@ -2,9 +2,7 @@ package com.vercer.leaf.exchange;
 
 import java.util.Iterator;
 
-import com.google.common.collect.Iterators;
 import com.google.inject.Provider;
-import com.vercer.leaf.utility.IterableToIteratorProvider;
 
 public abstract class Repeat<T> extends Loop<Iterator<T>>
 {
@@ -13,18 +11,12 @@ public abstract class Repeat<T> extends Loop<Iterator<T>>
 
 	public Repeat(Iterable<T> iterable)
 	{
-		// make nulls a little less painful
-		super(iterable == null ? Iterators.<T>emptyIterator() : iterable.iterator());
-	}
-
-	public Repeat(Provider<? extends Iterable<T>> provider)
-	{
-		super(new IterableToIteratorProvider<T>(provider));
+		iterator = iterable.iterator();
 	}
 
 	public Repeat(Iterator<T> iterator)
 	{
-		super(iterator);
+		this.iterator = iterator;
 	}
 
 	public T getItem()
@@ -49,11 +41,6 @@ public abstract class Repeat<T> extends Loop<Iterator<T>>
 	@Override
 	protected boolean loop()
 	{
-		if (iterator == null)
-		{
-			iterator = get();
-		}
-
 		// remove all children to repopulate
 		if (iterator.hasNext())
 		{

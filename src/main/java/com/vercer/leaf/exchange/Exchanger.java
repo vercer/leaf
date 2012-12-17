@@ -33,11 +33,11 @@ public interface Exchanger
 
 	Markup exchange(Markup markup);
 	
-	public class TransformException extends RuntimeException
+	public class ExchangeException extends RuntimeException
 	{
 		private static final long serialVersionUID = 1L;
 
-		public TransformException(String message, Markup markup, Throwable cause)
+		public ExchangeException(String message, Markup markup, Throwable cause)
 		{
 			super(build(message, markup), cause);
 		}
@@ -47,7 +47,7 @@ public interface Exchanger
 			return message += "\n\nMarkup:" + markup.toString();
 		}
 
-		public TransformException(String message, Markup markup)
+		public ExchangeException(String message, Markup markup)
 		{
 			this(message, markup, null);
 		}

@@ -2,12 +2,11 @@ package com.vercer.leaf.html;
 
 import java.net.URI;
 
-import com.google.inject.Provider;
 import com.vercer.leaf.Markup;
 import com.vercer.leaf.Markup.Builder;
 import com.vercer.leaf.exchange.Component;
 
-public class Image extends Component<URI>
+public class Image extends Component
 {
 	private String src;
 	private final String title;
@@ -20,12 +19,6 @@ public class Image extends Component<URI>
 	public Image(URI uri)
 	{
 		this(uri.toString(), null);
-	}
-
-	public Image(Provider<URI> uri)
-	{
-		super(uri);
-		this.title = null;
 	}
 
 	public Image(String src, String title)

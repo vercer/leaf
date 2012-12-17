@@ -1,9 +1,9 @@
 package com.vercer.leaf;
 
+import lombok.Getter;
+
 import com.vercer.leaf.exchange.Decorator;
 import com.vercer.leaf.exchange.Label;
-
-import lombok.Getter;
 
 public class MyDecorator extends Decorator
 {

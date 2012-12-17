@@ -1,41 +1,17 @@
 package com.vercer.leaf.exchange;
 
-import com.google.inject.Provider;
-import com.google.inject.util.Providers;
 import com.vercer.leaf.Markup;
 
-public abstract class Component<T> implements Exchanger, Provider<T>
+public abstract class Component implements Exchanger
 {
-	private final Provider<? extends T> provider;
 	private Exchanger chained;
 
-	public Component()
-	{
-		provider = null;
-	}
-
-	public Component(Provider<? extends T> provider)
-	{
-		this.provider = provider;
-	}
-
-	public Component(T value)
-	{
-		this(Providers.of(value));
-	}
-	
-	@Override
-	public T get()
-	{
-		return provider.get();
-	}
-
-	public void chain(Exchanger chained)
+	public final void chain(Exchanger chained)
 	{
 		this.chained = chained;
 	}
 	
-	public void chain(Exchanger...components)
+	public final void chain(Exchanger...components)
 	{
 		this.chained = new CompositeExchanger(components);
 	}
@@ -52,18 +28,21 @@ public abstract class Component<T> implements Exchanger, Provider<T>
 			// make sure the after hook is called even on throwing
 			try
 			{
-				beforeTransformComponent();
+				onBeforeComponent();
 				markup = exchangeComponentAndChained(markup);
 			}
 			finally
 			{
-				afterTransformComponent();
+				onAfterComponent();
 			}
 		}
 
 		return markup;
 	}
 
+	/**
+	 * Allow loop to override to call multiple times
+	 */
 	protected Markup exchangeComponentAndChained(Markup markup)
 	{
 		markup = exchangeComponent(markup);
@@ -74,11 +53,11 @@ public abstract class Component<T> implements Exchanger, Provider<T>
 		return markup;
 	}
 
-	protected void afterTransformComponent()
+	protected void onAfterComponent()
 	{
 	}
 
-	protected void beforeTransformComponent()
+	protected void onBeforeComponent()
 	{
 	}
 

@@ -6,12 +6,12 @@ import com.vercer.leaf.exchange.Container.NeedsParent;
 /**
  * @author John Patterson (john@vercer.com)
  */
-public class ParentContainerExchanger extends Container<Void> implements NeedsParent
+public class ParentContainerExchanger extends Container implements NeedsParent
 {
-	private Container<?> parent;
+	private Container parent;
 
 	@Override
-	public void setParent(Container<?> parent)
+	public void setParent(Container parent)
 	{
 		this.parent = parent;
 	}

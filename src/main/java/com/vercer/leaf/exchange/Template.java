@@ -14,7 +14,7 @@ import com.vercer.leaf.Markup;
 import com.vercer.leaf.Parser;
 
 @Log
-public abstract class Template extends Container<Void> implements Markup.Source
+public abstract class Template extends Container implements Markup.Source
 {
 	private static final Map<Class<?>, Markup> typeToTemplate =
 		new MapMaker()
@@ -53,7 +53,7 @@ public abstract class Template extends Container<Void> implements Markup.Source
 	protected final Markup exchangeComponent(Markup markup)
 	{
 		Markup template = getTemplate();
-		Markup transformed = transformTemplate(template);
+		Markup transformed = exchangeTemplate(template);
 
 		if (markup == null)
 		{
@@ -65,7 +65,7 @@ public abstract class Template extends Container<Void> implements Markup.Source
 		}
 	}
 
-	protected Markup transformTemplate(Markup markup)
+	protected Markup exchangeTemplate(Markup markup)
 	{
 		return super.exchangeComponent(markup);
 	}

@@ -76,7 +76,7 @@ public abstract class Decorator extends Template
 			Markup decorated = nextTemplate();
 
 			// skip the before and after intercepters
-			decorated = transformTemplate(decorated);
+			decorated = exchangeTemplate(decorated);
 
 			currentTemplateClass = existingDecoratorClass;
 

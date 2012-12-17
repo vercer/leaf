@@ -5,26 +5,42 @@ import java.util.List;
 import com.vercer.leaf.Leaf;
 import com.vercer.leaf.Markup;
 import com.vercer.leaf.Markup.Builder;
+import com.vercer.leaf.Parser;
 import com.vercer.leaf.exchange.Decorator;
 import com.vercer.leaf.exchange.Exchanger;
-import com.vercer.leaf.Parser;
 
 public abstract class Page extends Decorator
 {
 	// the current top level page - other pages may be contained
-	private static final ThreadLocal<Page> pages = new ThreadLocal<Page>();
+	private static final ThreadLocal<Page> outer = new ThreadLocal<Page>();
 
+	private final static ThreadLocal<Page> current = new ThreadLocal<Page>();
+	
 	// keep reference to the head so we can write to it later
 	private Head head;
 
 	private Builder bodyBuilder;
 
 	/**
-	 * @return The current top level page
+	 * @return The top level page
 	 */
 	public static Page getOuterPage()
 	{
-		return pages.get();
+		return outer.get();
+	}
+
+	/**
+	 * @return The current page being exchanged
+	 */
+	public static Page getCurrentPage()
+	{
+		return current.get();
+	}
+	
+	private long id;
+	public String createUniqueId()
+	{
+		return Long.toString(id++, Character.MAX_RADIX);
 	}
 
 	/**
@@ -46,63 +62,73 @@ public abstract class Page extends Decorator
 	}
 
 	@Override
-	protected final void beforeTransformComponent()
+	protected final void onBeforeComponent()
 	{
 		// see if there is another top level page that contains us
-		Page top = pages.get();
+		Page top = outer.get();
 		if (top == null)
 		{
 			// this is the top level page so remember it
-			pages.set(this);
+			outer.set(this);
 		}
 	}
 
 	@Override
-	protected final Markup transformTemplate(Markup markup)
+	protected final Markup exchangeTemplate(Markup markup)
 	{
 		// must be decorated markup and we have already transformed the decorator
 		if (!"html".equals(markup.getTag()))
 		{
-			// head must exist if we are an inner page
-			assert head != null : "Outer decorator page markup must be html";
-
-			// return the whole page which has no body or head
-			return super.exchangeContainer(markup);
+			throw new ExchangeException("Outer decorator page markup must be html", markup);
 		}
 
-		Markup transformed = transformPage(markup);
+		try
+		{
+			current.set(this);
 
-		// see if we are processing the outer page
-		if (getOuterTemplateClass() == getCurrentTemplateClass() && getOuterPage() == this)
-		{
-			// outer page returns all html
-			return transformed;
+			Markup transformed = exchangePage(markup);
+			
+			onAfterPage();
+			
+			// see if we are processing the outer page
+			if (getOuterTemplateClass() == getCurrentTemplateClass() && getOuterPage() == this)
+			{
+				// outer page returns all html
+				return transformed;
+			}
+			else
+			{
+				// contained page returns only the body
+				return bodyBuilder.tag(Leaf.get().getSettings().getPrefix() + ":body").build();
+			}
 		}
-		else
+		finally
 		{
-			// contained page returns only the body
-			return bodyBuilder.tag(Leaf.get().getSettings().getPrefix() + ":body").build();
-//			return bodyBuilder.build();
+			current.set(null);
 		}
 	}
 
-	protected Markup transformPage(Markup markup)
+	protected void onAfterPage()
 	{
-		return super.exchangeContainer(markup);
+	}
+
+	protected Markup exchangePage(Markup markup)
+	{
+		return exchangeContainer(markup);
 	}
 
 	@Override
-	protected final void afterTransformComponent()
+	protected final void onAfterComponent()
 	{
-		if (pages.get() == this)
+		if (outer.get() == this)
 		{
 			// clean up after ourselves
-			pages.set(null);
+			outer.set(null);
 		}
-		afterTransformPage();
+		afterExchangePage();
 	}
 
-	protected void afterTransformPage()
+	protected void afterExchangePage()
 	{
 	}
 
@@ -123,7 +149,7 @@ public abstract class Page extends Decorator
 		{
 			if (head == null)
 			{
-				Page top = pages.get();
+				Page top = outer.get();
 				if (top == this)
 				{
 					head = new Head();
@@ -135,14 +161,14 @@ public abstract class Page extends Decorator
 			}
 
 			// process the head markup against the page
-			Markup transformed = this.exchangeContainer(child);
+			Markup transformed = exchangeContainer(child);
 
 			return head.exchange(transformed);
 		}
 		else if ("body".equals(child.getTag()))
 		{
 			// TODO like head, allow contained pages to contribute body attributes
-			Markup bodyMarkup = transformBody(child);
+			Markup bodyMarkup = exchangeBody(child);
 
 			// copy any body tag attributes to the new body tag
 			Markup existingBodyMarkup = bodyBuilder == null ? null : bodyBuilder.build();
@@ -159,11 +185,16 @@ public abstract class Page extends Decorator
 		else 
 		{
 			// this method is also called for children of head and body
-			return super.exchangeChild(child);
+			return exchangePageChild(child);
 		}
 	}
 
-	protected Markup transformBody(Markup child)
+	protected Markup exchangePageChild(Markup child)
+	{
+		return super.exchangeChild(child);
+	}
+
+	protected Markup exchangeBody(Markup child)
 	{
 		// use this page to get fields
 		return this.exchangeContainer(child);
