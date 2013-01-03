@@ -21,7 +21,7 @@ import com.google.inject.binder.ScopedBindingBuilder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.servlet.ServletModule;
 import com.vercer.convert.ArrayToList;
-import com.vercer.convert.CombinedTypeConverter;
+import com.vercer.convert.CompositeTypeConverter;
 import com.vercer.convert.Converter;
 import com.vercer.convert.DateConverters;
 import com.vercer.convert.NumberConverters;
@@ -41,10 +41,9 @@ import com.vercer.leaf.annotation.Handle;
 import com.vercer.leaf.annotation.Handle.Http;
 import com.vercer.leaf.annotation.Match;
 import com.vercer.leaf.convert.BooleanToTransformer;
-import com.vercer.leaf.convert.ObjectToLabel;
-import com.vercer.leaf.convert.ObjectToResponse;
 import com.vercer.leaf.convert.CharSequenceToLabel;
-import com.vercer.leaf.convert.StringToReply;
+import com.vercer.leaf.convert.ObjectToStringToReply;
+import com.vercer.leaf.convert.StringToRedirectReply;
 import com.vercer.leaf.convert.UriToAnchor;
 import com.vercer.leaf.convert.UrlToAnchor;
 import com.vercer.leaf.exchange.Container;
@@ -174,45 +173,52 @@ public abstract class LeafModule extends ServletModule
 	}
 
 	/**
-	 *	Injectable type converter
+	 *	Allows user declared converters to be injected
 	 */
-	public static class GuiceTypeConverter extends CombinedTypeConverter
+	public static class GuiceTypeConverter extends CompositeTypeConverter
 	{
 		@Override
 		public <T> T convert(Object input, Type source, Type target)
 		{
-			if (input == null && source == String.class)
-			{
-				input = "";
-			}
 			return super.convert(input, source, target);
 		}
 		
 		@Inject
 		public void registerConverters(Set<Converter<?, ?>> converters)
 		{
-			super.registerAll(converters);
+			register(TypeConverter.DIRECT);
+			for (Converter<?, ?> converter : converters)
+			{
+				register(converter);
+			}
 		}
 	}
 
 	protected void bindDefaultConverters(Multibinder<Converter<?, ?>> converters)
 	{
-		converters.addBinding().toInstance(new ObjectToString());
+		// basic type converters
 		converters(converters, new NumberConverters());
 		converters(converters, new DateConverters());
 		converters(converters, new SingletonListConverters());
 		converters(converters, new StringToPrimitive());
-		converters.addBinding().toInstance(new StringArrayToString());
-		converters.addBinding().to(ArrayToList.class);
+		
 		converters.addBinding().toInstance(new ObjectToString());
+		converters.addBinding().toInstance(new StringArrayToString());
+		converters.addBinding().toInstance(new ArrayToList());
 		converters.addBinding().toInstance(new ThrowableToString());
+		
+		// exchanger converters
 		converters.addBinding().toInstance(new CharSequenceToLabel());
 		converters.addBinding().toInstance(new BooleanToTransformer());
 		converters.addBinding().toInstance(new UriToAnchor());
 		converters.addBinding().toInstance(new UrlToAnchor());
-		converters.addBinding().toInstance(new StringToReply());
-		converters.addBinding().to(ObjectToResponse.class).in(Scopes.SINGLETON);
-		converters.addBinding().to(ObjectToLabel.class).in(Scopes.SINGLETON);
+		converters.addBinding().toInstance(new ObjectToContainer());
+		
+		// convert a string into a redirect
+		converters.addBinding().toInstance(new StringToRedirectReply());
+		
+		// convert an object into a string then to a reply (redirect from above)
+		converters.addBinding().to(ObjectToStringToReply.class).in(Scopes.SINGLETON);
 	}
 
 	@Provides

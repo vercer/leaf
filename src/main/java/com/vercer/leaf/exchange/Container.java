@@ -27,8 +27,8 @@ public abstract class Container extends Component
 	}
 	
 	@Inject	private static Set<Exchanger> globals = new HashSet<Exchanger>();
-
-	// call during single threaded initialisation
+	
+	// call during single threaded initialization
 	public static void addGlobalTransformer(Exchanger transformer)
 	{
 		globals.add(transformer);
@@ -37,7 +37,7 @@ public abstract class Container extends Component
 	public Container()
 	{
 	}
-
+	
 	@Override
 	protected Markup exchangeComponent(Markup markup)
 	{
@@ -81,7 +81,7 @@ public abstract class Container extends Component
 
 		try
 		{
-			Exchanger transformer = transformer(childMarkupId, child);
+			Exchanger transformer = exchanger(childMarkupId, child);
 			if (transformer instanceof NeedsParent)
 			{
 				((NeedsParent) transformer).setParent(this);
@@ -94,41 +94,39 @@ public abstract class Container extends Component
 		}
 	}
 
-	private Exchanger transformer(String id, Markup markup)
+	private Exchanger exchanger(String id, Markup markup)
 	{
-		Map<String, Method> nameToMethod = getAccessibleReadMethods(this.getClass());
+		Map<String, Method> nameToMethod = getAccessibleReadMethods(getBean().getClass());
 		Method getter = nameToMethod.get(id);
 
 		if (getter == null)
 		{
-			throw new ExchangeException("No transformer for " + id, markup);
+			throw new ExchangeException("No getter for " + id + " in " + getBean().getClass(), markup);
 		}
 
+		Object object;
 		try
 		{
-			Object object = getter.invoke(this);
-			TypeConverter converter = Leaf.get().getConverter();
-			Exchanger transformer = converter.convert(object, getter.getReturnType(), Exchanger.class);
-			if (transformer == null)
-			{
-				return Exchanger.REMOVE;
-			}
-			else
-			{
-				return transformer;
-			}
+			object = getter.invoke(getBean());
 		}
 		catch (Exception e)
 		{
-			if (e instanceof RuntimeException)
-			{
-				throw (RuntimeException) e;
-			}
-			else
-			{
-				throw new RuntimeException(e);
-			}
+			throw new RuntimeException(e);
 		}
+		
+		// handle all nulls the same - remove the markup
+		if (object == null)
+		{
+			return Exchanger.REMOVE;
+		}
+		
+		TypeConverter converter = Leaf.get().getConverter();
+		Exchanger transformer = converter.convert(object, getter.getReturnType(), Exchanger.class);
+		if (transformer == null)
+		{
+			throw new ExchangeException("No exchanger found for " + object, markup);
+		}
+		return transformer;
 	}
 
 	private static final Map<Class<?>, Map<String, Method>> classToNameToMethod = Maps.newConcurrentMap();
@@ -166,4 +164,8 @@ public abstract class Container extends Component
 		return nameToMethod;
 	}
 
+	protected Object getBean()
+	{
+		return this;
+	}
 }

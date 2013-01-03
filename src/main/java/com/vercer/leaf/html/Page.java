@@ -93,6 +93,8 @@ public abstract class Page extends Decorator
 			// see if we are processing the outer page
 			if (getOuterTemplateClass() == getCurrentTemplateClass() && getOuterPage() == this)
 			{
+				onAfterOuterPage();
+
 				// outer page returns all html
 				return transformed;
 			}
@@ -108,7 +110,17 @@ public abstract class Page extends Decorator
 		}
 	}
 
+	/**
+	 * Called after out page and contained pages exchanged.
+	 */
 	protected void onAfterPage()
+	{
+	}
+	
+	/**
+	 * Called only once after the outer page is exchanged. 
+	 */
+	protected void onAfterOuterPage()
 	{
 	}
 

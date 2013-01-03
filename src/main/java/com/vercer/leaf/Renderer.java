@@ -38,8 +38,8 @@ public class Renderer
 	{
 		builder.append(markup.getPrelude());
 		
-		boolean remove = !removeSpecialTags || !markup.getTag().startsWith(prefix + ":");
-		if (remove)
+		boolean show = !removeSpecialTags || !markup.getTag().startsWith(prefix + ":");
+		if (show)
 		{
 			builder.append('<');
 			builder.append(markup.getTag());
@@ -78,7 +78,7 @@ public class Renderer
 		}
 		builder.append(markup.getContent());
 
-		if (remove)
+		if (show)
 		{
 			builder.append("</");
 			builder.append(markup.getTag());
