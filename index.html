@@ -33,16 +33,30 @@
       <section id="main_content" class="inner">
         <p>Leaf is an extremely simple Java web framework which takes concepts from Google Sitebricks and Apache Wicket, rolls them together, chucks out the complicated bloat, mixes in a few new ideas and makes sure the whole lot runs really well on Google App Engine or any servlet container.</p>
 
-<p>It is built on top of Google's Guice Servlet framework so you get all of that dependency injection goodness and easy configuration.  </p>
+<p>It is built on top of Google's Guice Servlet framework so you get all of that dependency injection goodness and easy configuration.  HTML websites and headless web services are extremely easy to implement and configure using LeafLeaf module that extends ServletModule.</p>
 
-<p>Leaf is simple - a lot more simple than most web frameworks because it does not try to replicate features that can be best handled with GWT on the client.</p>
+<p>Leaf is simple - a lot more simple than most web frameworks because it does not try to replicate features that are already handled by Guice Servlet or can be best handled with GWT on the client.</p>
 
 <h2>Overview</h2>
 
 <p>Like Apache Wicket, Leaf uses its own super simple markup template system that matches an id in your well formed markup to a Java component that can modify that markup.  There is no scripting language.  Scripting in markup files is bad.  The attached Java component controls all modifications to the markup and you can debug all of it in your IDE.</p>
 
-<pre><code>
+<pre><code>&lt;table&gt;
+  &lt;tr l:x="row"&gt;
+    &lt;td l:x="cell"&gt;This will be replaced by the Exchanger called "cell"&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
 </code></pre>
+
+<p>The attributes l:x are used to find a Java <a href="https://github.com/vercer/leaf/blob/master/src/main/java/com/vercer/leaf/exchange/Exchanger.java">Exchanger</a> that can replace the markup with anything you like.  An Exchanger is very simple to implement and gives you complete controls of the markup that ends up being written in the response.</p>
+
+<pre><code>public interface Exchanger
+{
+  Markup exchange(Markup markup);
+}
+</code></pre>
+
+<p>Markup is an immutable object that represents a special xml tag letting you easily compose a tree of tags to create an html document.  Unlike an XML document, not all tags in your template file become a Markup object but only the ones that you need control over.</p>
       </section>
     </div>
 
