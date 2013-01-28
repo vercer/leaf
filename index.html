@@ -33,20 +33,26 @@
       <section id="main_content" class="inner">
         <p>Leaf is an extremely simple Java web framework which takes concepts from Google Sitebricks and Apache Wicket, rolls them together, chucks out the complicated bloat, mixes in a few new ideas and makes sure the whole lot runs really well on Google App Engine or any servlet container.</p>
 
-<p>It is built on top of Google's Guice Servlet framework so you get all of that dependency injection goodness and easy configuration.  HTML websites and headless web services are extremely easy to implement and configure using LeafLeaf module that extends ServletModule.</p>
+<p>It is built on top of Google's Guice Servlet framework so you get all of that dependency injection goodness and easy configuration for free.  HTML websites and headless web services are extremely easy to implement and configure using LeafLeaf module that extends ServletModule.</p>
 
-<p>Leaf is simple - a lot more simple than most web frameworks because it does not try to replicate features that are already handled by Guice Servlet or can be best handled with GWT on the client.</p>
+<p>Leaf is simple - a lot more simple than most web frameworks because it does not try to replicate features that are already handled by Guice Servlet or can be best handled with Google Web Toolkit on the client.</p>
 
-<h2>Overview</h2>
+<h2>The Basics - Templates, Exchangers and configuration.</h2>
 
-<p>Like Apache Wicket, Leaf uses its own super simple markup template system that matches an id in your well formed markup to a Java component that can modify that markup.  There is no scripting language.  Scripting in markup files is bad.  The attached Java component controls all modifications to the markup and you can debug all of it in your IDE.</p>
+<h3>Html Template</h3>
 
-<pre><code>&lt;table&gt;
-  &lt;tr l:x="row"&gt;
-    &lt;td l:x="cell"&gt;This will be replaced by the Exchanger called "cell"&lt;/td&gt;
-  &lt;/tr&gt;
-&lt;/table&gt;
+<p>Like Apache Wicket, Leaf uses its own super simple markup template system that matches an id in your well formed markup to a Java component that can modify that markup.  There is no scripting language.  Scripting in markup files is bad.  The attached Java component controls all modifications to the markup so you can debug every step in your IDE.</p>
+
+<pre><code>HelloWorld.html
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;span l:x="hello"&gt;This will be replaced by the Exchanger field "hello"&lt;/span&gt;
+    &lt;span l:x="world"&gt;This will be replaced by the Exchanger field "world"&lt;/span&gt;!
+  &lt;/body&gt;
+&lt;/html&gt;
 </code></pre>
+
+<h3>Java Component and configuration Module</h3>
 
 <p>The attributes l:x are used to find a Java <a href="https://github.com/vercer/leaf/blob/master/src/main/java/com/vercer/leaf/exchange/Exchanger.java">Exchanger</a> that can replace the markup with anything you like.  An Exchanger is very simple to implement and gives you complete controls of the markup that ends up being written in the response.</p>
 
@@ -56,7 +62,42 @@
 }
 </code></pre>
 
-<p>Markup is an immutable object that represents a special xml tag letting you easily compose a tree of tags to create an html document.  Unlike an XML document, not all tags in your template file become a Markup object but only the ones that you need control over.</p>
+<p>Markup is an immutable object that represents a special xml tag letting you easily compose a tree of tags to create an html document.  Unlike an XML document, not all tags in your template file become a Markup object but only the ones that you need to control.  The default Parser creates a Markup object for all elements containing an l:x attribute.</p>
+
+<p>The matching Exchanger is found by looking at the Page's properties for a getter with the same name as the l:x attribute.  Here was use the excellent Project Lombok to make our Java code more succinct - notice the @Getter annotations to create properties from fields. </p>
+
+<pre><code>Table.java
+
+  public class HelloWorld extends Template
+  {
+      @Getter
+      Label hello = new Label("Hello");
+
+      @Getter
+      String world = "World";
+  }
+</code></pre>
+
+<p>Here we have a top level class called Table which will look for an html file in the same directory.  Templates and components live side by side - you can think of them as different aspects to the same logical unit.  </p>
+
+<p>When the Table Template parses its markup file it will see the l:x="hello" attribute and look for a property with the same name, finding the Label value which extends Exchanger and knows how to modify the markup to show "Hello".</p>
+
+<p>Next it finds the property "world" and returns its String value... but wait we need an Exchanger to modify our markup not a String!  This is where things get interesting.  Leaf needs to convert the String into an Exchanger.</p>
+
+<p>Many places in Leaf use a TypeConverter to transform an object to another type.  You are in complete control of how this is configured so ultimately you have complete control of how properties are turned into Markup.  By default, Leaf registers a CharSequenceToLabel converter which will turn a String into a Label object.  There are many useful converters registered by default that you can override as you like.</p>
+
+<h3>Configuration</h3>
+
+<p>Leaf inherits its Guice based configuration module from Guice Servlet allowing you to inject all of the standard servlet classes into your top level reply objects.</p>
+
+<pre><code>public class GuideLeafModule extends LeafModule
+{
+  @Override
+  protected void configure(Settings.SettingsBuilder settings)
+  {
+    reply(HelloWorld.class).match("/hello-world");
+  }
+</code></pre>
       </section>
     </div>
 
