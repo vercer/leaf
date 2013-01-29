@@ -37,9 +37,9 @@
 
 <p>Leaf is simple - a lot more simple than most web frameworks because it does not try to replicate features that are already handled by Guice Servlet or can be best handled with Google Web Toolkit on the client.</p>
 
-<h2>The Basics - Templates, Exchangers and configuration.</h2>
+<h2>A basic Hello World example</h2>
 
-<p>Here is a taste of coding with Leaf.  For more details see the <a href="https://github.com/vercer/leaf/wiki">Wiki</a>.</p>
+<p>Creating an html template, its Java components and configuring it to handle requests.  For more details see the <a href="https://github.com/vercer/leaf/wiki">Wiki</a>.</p>
 
 <h3>Html Template</h3>
 
@@ -63,7 +63,7 @@
 <span class="o">}</span>
 </pre></div>
 
-<p>Markup is an immutable object that represents a special xml tag letting you easily compose a tree of tags to create an html document.  Unlike an XML document, not all tags in your template file become a Markup object but only the ones that you need to control.  The default Parser creates a Markup object for all elements containing an l:x attribute.</p>
+<p>Markup is an immutable object that represents a special xml tag letting you easily compose a tree of tags to create an xml (or html) document.  Unlike an XML DOM, not all tags in your template file become a Markup object but only the ones that you need to control.  It is also a more simple representation which is easier to manipulate, understand and may use less memory. The default Parser used for an html page creates a Markup object for all elements containing an l:x attribute and also the <code>&lt;head&gt;</code> and <code>&lt;body&gt;</code> elements.</p>
 
 <p>The matching Exchanger is found by looking at the Page's properties for a getter with the same name as the l:x attribute.  Here we use the excellent <a href="http://projectlombok.org/">Project Lombok</a> to make our Java code more succinct - notice the @Getter annotations to create properties from fields. </p>
 
@@ -77,7 +77,7 @@
   <span class="o">}</span>
 </pre></div>
 
-<p>Here we have a top level class called Table which will look for an html file in the same directory.  Templates and components live side by side - you can think of them as different aspects to the same logical unit.  </p>
+<p>Here we have a top level class defined in HelloWorld.java which will look for an html file in the same directory.  Templates and components live side by side - you can think of them as different aspects to the same logical unit.  </p>
 
 <p>When the Table Template parses its markup file it will see the l:x="hello" attribute and look for a property with the same name, finding the Label value which extends Exchanger and knows how to modify the markup to show "Hello".</p>
 
@@ -140,6 +140,20 @@
 
 <p>Leaf inherits its Guice based configuration module from Guice Servlet allowing you to inject all of the standard servlet classes into your top level reply objects.</p>
 
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HelloWorld</span> <span class="kd">extends</span> <span class="n">Template</span>
+<span class="o">{</span>
+  <span class="c1">// inject a standard servlet object</span>
+  <span class="nd">@Inject</span> <span class="n">HttpServletRequest</span> <span class="n">request</span><span class="o">;</span>
+
+  <span class="c1">// inject a user defined binding</span>
+  <span class="nd">@Inject</span> <span class="n">WorldManager</span> <span class="n">manager</span><span class="o">;</span>
+
+  <span class="o">...</span>
+<span class="o">}</span>
+</pre></div>
+
+<p>This is all configured in a pimped up Guice Module:</p>
+
 <pre><code>public class HelloWorldLeafModule extends LeafModule
 {
   @Override
@@ -161,14 +175,14 @@
     serve("/somePath").with(MyServlet.class);
 
     // also normal guice bindings
-    bind(Datasource.class).to(MyDatasource.class).in(ServletScopes.REQUEST);
+    bind(WorldManager.class).to(PlanetEarthManager.class).in(ServletScopes.REQUEST);
   }
 }
 </code></pre>
 
 <h3>Plays well with GAE and GWT</h3>
 
-<p>Leaf is often used in conjunction with Google App Engine and Google Web Toolkit although it has no dependencies on either and can be used just as easily with any other backend or client tools.  However there are a couple cool configuration features that help you during development.</p>
+<p>Leaf is often used in conjunction with Google App Engine and Google Web Toolkit although it has no dependencies on either and can be used just as easily with any other backend or client tools.  However there are a couple of cool configuration features that help you during development.</p>
 
 <p>By adding these two lines to your LeafModule</p>
 
@@ -176,7 +190,7 @@
 use(new ToolkitConfiguration());
 </code></pre>
 
-<p>Your application will now automatically pass the ?gwt.codesvr parameter in every link.  This makes it easy to develop multi page GWT apps in development mode.</p>
+<p>Your application will now automatically pass the <code>?gwt.codesvr</code> parameter in every link.  This makes it easy to develop multi page GWT apps in development mode.</p>
 
 <p>It will also know when it is running on the development server (not live) and automatically reload template files on every request rather than caching them as it does on the live server.  Also, Guice will be able to inject common services such as DatastoreService and UserService into your top level components.</p>
 
