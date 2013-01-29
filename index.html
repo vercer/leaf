@@ -31,52 +31,54 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <p>Leaf is an extremely simple Java web framework which takes concepts from Google Sitebricks and Apache Wicket, rolls them together, chucks out the complicated bloat, mixes in a few new ideas and makes sure the whole lot runs really well on Google App Engine or any servlet container.</p>
+        <p>Leaf is an extremely simple Java web framework which takes concepts from <a href="http://sitebricks.org/">Sitebricks</a> and <a href="http://wicket.apache.org/">Apache Wicket</a>, rolls them together, chucks out the complicated bloat, mixes in a few new ideas and makes sure the whole lot runs really well on <a href="https://developers.google.com/appengine/">Google App Engine</a> or any servlet container.</p>
 
-<p>It is built on top of Google's Guice Servlet framework so you get all of that dependency injection goodness and easy configuration for free.  HTML websites and headless web services are extremely easy to implement and configure using LeafLeaf module that extends ServletModule.</p>
+<p>It is built on top of Google's <a href="http://code.google.com/p/google-guice/wiki/Servlets">Guice Servlet</a> framework so you get all of that dependency injection goodness and easy configuration for free.  HTML websites and headless web services are extremely easy to implement and configure using LeafModule that extends ServletModule.</p>
 
 <p>Leaf is simple - a lot more simple than most web frameworks because it does not try to replicate features that are already handled by Guice Servlet or can be best handled with Google Web Toolkit on the client.</p>
 
 <h2>The Basics - Templates, Exchangers and configuration.</h2>
 
+<p>Here is a taste of coding with Leaf.  For more details see the <a href="https://github.com/vercer/leaf/wiki">Wiki</a>.</p>
+
 <h3>Html Template</h3>
 
-<p>Like Apache Wicket, Leaf uses its own super simple markup template system that matches an id in your well formed markup to a Java component that can modify that markup.  There is no scripting language.  Scripting in markup files is bad.  The attached Java component controls all modifications to the markup so you can debug every step in your IDE.</p>
+<p>Like Apache Wicket, Leaf uses its own super simple markup template system that matches an attribute value in your well formed markup to a Java component that can modify that markup.  There is no scripting language.  Scripting in markup files is bad.  The attached Java component controls all modifications to the markup so you can debug every step in your IDE.</p>
 
-<pre><code>HelloWorld.html
-&lt;html&gt;
-  &lt;body&gt;
-    &lt;span l:x="hello"&gt;This will be replaced by the Exchanger field "hello"&lt;/span&gt;
-    &lt;span l:x="world"&gt;This will be replaced by the Exchanger field "world"&lt;/span&gt;!
-  &lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
+<div class="highlight"><pre>HelloWorld.html
+<span class="nt">&lt;html&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;span</span> <span class="na">l:x=</span><span class="s">"hello"</span><span class="nt">&gt;</span>This is replaced by the Exchanger at field "hello"<span class="nt">&lt;/span&gt;</span>
+    <span class="nt">&lt;span</span> <span class="na">l:x=</span><span class="s">"world"</span><span class="nt">&gt;</span>This is replaced by the Exchanger at field "world"<span class="nt">&lt;/span&gt;</span>!
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</pre></div>
 
 <h3>Java Component and configuration Module</h3>
 
-<p>The attributes l:x are used to find a Java <a href="https://github.com/vercer/leaf/blob/master/src/main/java/com/vercer/leaf/exchange/Exchanger.java">Exchanger</a> that can replace the markup with anything you like.  An Exchanger is very simple to implement and gives you complete controls of the markup that ends up being written in the response.</p>
+<p>The l:x attributes are used to find a Java <a href="https://github.com/vercer/leaf/blob/master/src/main/java/com/vercer/leaf/exchange/Exchanger.java">Exchanger</a> that can replace the markup with anything you like.  An Exchanger is very simple to implement and gives you complete controls of the markup that ends up being written in the response.</p>
 
-<pre><code>public interface Exchanger
-{
-  Markup exchange(Markup markup);
-}
-</code></pre>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Exchanger</span>
+<span class="o">{</span>
+  <span class="n">Markup</span> <span class="nf">exchange</span><span class="o">(</span><span class="n">Markup</span> <span class="n">markup</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></div>
 
 <p>Markup is an immutable object that represents a special xml tag letting you easily compose a tree of tags to create an html document.  Unlike an XML document, not all tags in your template file become a Markup object but only the ones that you need to control.  The default Parser creates a Markup object for all elements containing an l:x attribute.</p>
 
-<p>The matching Exchanger is found by looking at the Page's properties for a getter with the same name as the l:x attribute.  Here was use the excellent Project Lombok to make our Java code more succinct - notice the @Getter annotations to create properties from fields. </p>
+<p>The matching Exchanger is found by looking at the Page's properties for a getter with the same name as the l:x attribute.  Here we use the excellent <a href="http://projectlombok.org/">Project Lombok</a> to make our Java code more succinct - notice the @Getter annotations to create properties from fields. </p>
 
-<pre><code>Table.java
+<div class="highlight"><pre><span class="n">Table</span><span class="o">.</span><span class="na">java</span>
 
-  public class HelloWorld extends Template
-  {
-      @Getter
-      Label hello = new Label("Hello");
+  <span class="kd">public</span> <span class="kd">class</span> <span class="nc">HelloWorld</span> <span class="kd">extends</span> <span class="n">Template</span>
+  <span class="o">{</span>
+      <span class="nd">@Getter</span>
+      <span class="n">Label</span> <span class="n">hello</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Label</span><span class="o">(</span><span class="s">"Hello"</span><span class="o">);</span>
 
-      @Getter
-      String world = "World";
-  }
-</code></pre>
+      <span class="nd">@Getter</span>
+      <span class="n">String</span> <span class="n">world</span> <span class="o">=</span> <span class="s">"World"</span><span class="o">;</span>
+  <span class="o">}</span>
+</pre></div>
 
 <p>Here we have a top level class called Table which will look for an html file in the same directory.  Templates and components live side by side - you can think of them as different aspects to the same logical unit.  </p>
 
@@ -84,19 +86,89 @@
 
 <p>Next it finds the property "world" and returns its String value... but wait we need an Exchanger to modify our markup not a String!  This is where things get interesting.  Leaf needs to convert the String into an Exchanger.</p>
 
-<p>Many places in Leaf use a TypeConverter to transform an object to another type.  You are in complete control of how this is configured so ultimately you have complete control of how properties are turned into Markup.  By default, Leaf registers a CharSequenceToLabel converter which will turn a String into a Label object.  There are many useful converters registered by default that you can override as you like.</p>
+<h3>Type Converters are central to the simplicity and flexibility</h3>
+
+<p>Many places in Leaf use a TypeConverter to transform an object to another type.  You are in complete control of how this is configured so ultimately you have complete control of how properties of every type are turned into Markup.  By default, Leaf registers a CharSequenceToLabel converter which will turn a String into a Label object.  There are many useful converters registered by default that you can override as you like.</p>
+
+<p>Another example is a <a href="https://github.com/vercer/leaf/blob/master/src/main/java/com/vercer/leaf/convert/BooleanToTransformer.java">BooleanToTransformer</a> converter which will show any child markup only if the property value is true.</p>
+
+<div class="highlight"><pre><span class="n">Table</span><span class="o">.</span><span class="na">java</span>
+
+  <span class="kd">public</span> <span class="kd">class</span> <span class="nc">HelloWorld</span> <span class="kd">extends</span> <span class="n">Template</span>
+  <span class="o">{</span>
+      <span class="nd">@Getter</span>
+      <span class="n">Label</span> <span class="n">hello</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Label</span><span class="o">(</span><span class="s">"Hello"</span><span class="o">);</span>
+
+      <span class="nd">@Getter</span>
+      <span class="n">String</span> <span class="n">world</span> <span class="o">=</span> <span class="s">"World"</span><span class="o">;</span>
+
+      <span class="nd">@Getter</span>
+      <span class="kt">boolean</span> <span class="n">canSeeGreeting</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+  <span class="o">}</span>
+</pre></div>
+
+<p>Then we can add a container to our markup</p>
+
+<div class="highlight"><pre>HelloWorld.html
+<span class="nt">&lt;html&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;span</span> <span class="na">l:x=</span><span class="s">"hello"</span><span class="nt">&gt;</span>This is replaced by the Exchanger at field "hello"<span class="nt">&lt;/span&gt;</span>
+    <span class="nt">&lt;l:container</span> <span class="na">l:x=</span><span class="s">"canSeeGreeting"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;span</span> <span class="na">l:x=</span><span class="s">"world"</span><span class="nt">&gt;</span>This is replaced by the Exchanger at field "world"<span class="nt">&lt;/span&gt;</span>!
+    <span class="nt">&lt;/l:container&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</pre></div>
+
+<p>Now the word "World" will only be rendered if canSeeGreeting is set to <code>true</code>.  Note that although the "world" tag is a child of "canSeeGreeting" the outer class HelloWorld is still used to resolve the property name.  See <a href="https://github.com/vercer/leaf/blob/master/src/main/java/com/vercer/leaf/convert/BooleanToTransformer.java">BooleanToTransformer</a> to see why this happens - and remember you can override this converter or any other to give the behaviour you want.</p>
 
 <h3>Configuration</h3>
 
 <p>Leaf inherits its Guice based configuration module from Guice Servlet allowing you to inject all of the standard servlet classes into your top level reply objects.</p>
 
-<pre><code>public class GuideLeafModule extends LeafModule
+<pre><code>public class HelloWorldLeafModule extends LeafModule
 {
   @Override
-  protected void configure(Settings.SettingsBuilder settings)
+  protected void configure(Settings.Builder settings)
   {
+    // url paths are matched by regex - can also set in class using @Match annotation
     reply(HelloWorld.class).match("/hello-world");
+
+    // you can get the matched "groups" in your handler method with @Capture annotation
+    reply(AnotherPage.class).match("/anotherPage/(.*)");
+
+     // register a converter that will take precedence over any default converters
+    converter(StringToReply.class);
+
+    // set leaf specific settings on an immutable object you can read in your app
+    settings.removeComments(false); // keep html comments
+
+    // set standard guice servlet bindings - LeafModule is a subclass of Guice's ServletModule
+    serve("/somePath").with(MyServlet.class);
+
+    // also normal guice bindings
+    bind(Datasource.class).to(MyDatasource.class).in(ServletScopes.REQUEST);
   }
+}
+
+### Plays well with GAE and GWT
+
+Leaf is often used in conjunction with Google App Engine and Google Web Toolkit although it has no dependencies on either and can be used just as easily with any other backend or client tools.  However there are a couple cool configuration features that help you during development.
+
+By adding these two lines to your LeafModule
+
+</code></pre>
+
+<p>use(new EngineConfiguration());
+use(new ToolkitConfiguration());</p>
+
+<pre><code>
+Your application will now automatically pass the ?gwt.codesvr parameter in every link.  This makes it easy to develop multi page GWT apps in development mode.
+
+It will also know when it is running on the development server (not live) and automatically reload template files on every request rather than caching them as it does on the live server.  Also, Guice will be able to inject common services such as DatastoreService and UserService into your top level components.
+
+Again, there is nothing special about these convenient Configuration units - you can create you own for other environments.
+
 </code></pre>
       </section>
     </div>
